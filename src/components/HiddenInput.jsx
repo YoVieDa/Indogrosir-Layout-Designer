@@ -1,0 +1,198 @@
+import React, { useEffect, useState, useRef } from "react";
+import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import ModalAlert from "./ModalAlert";
+import { IcErr, IcRefresh } from "../assets";
+import { channels } from "../shared/constants";
+import { toggleMemberMerah } from "../services/redux/memberReducer";
+import { setGlDataUser } from "../services/redux/userReducer";
+import Loader from "./Loader";
+import { setGlDtIp } from "../services/redux/ipReducer";
+import { LOGIN_KEY, URL_GATEWAY } from "../config.js";
+const { ipcRenderer } = window.require("electron");
+
+function HiddenInput({ closingState, logoutState }) {
+  const [inputValue, setInputValue] = useState("");
+  const URL_GATEWAY = useSelector((state) => state.glRegistry.dtGatewayURL);
+  const inputRef = useRef(null);
+  const [openModalAlert, setOpenModalAlert] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState("");
+  let stateIpAdd = "";
+  const glRegistryDt = useSelector(
+    (state) => state.glRegistry.dtDecryptedRegistry
+  );
+  const navigate = useNavigate();
+  const handleNavigate = () => {
+    navigate("/mainmenu");
+  };
+  const dispatch = useDispatch();
+
+  const handleToggleMember = () => {
+    dispatch(toggleMemberMerah());
+  };
+
+  const handleInputChange = (e) => {
+    // Mengupdate nilai state saat input berubah
+    setInputValue(e.target.value);
+  };
+
+  const getIpAddress = () => {
+    return new Promise((resolve, reject) => {
+      ipcRenderer.send("get_ip_address");
+
+      // Listen for the event
+      ipcRenderer.once("get_ip_address", (event, arg) => {
+        stateIpAdd = arg;
+        console.log("stateIpAdd di get", stateIpAdd);
+        dispatch(setGlDtIp(stateIpAdd));
+        resolve();
+      });
+
+      // Handle error if needed
+      ipcRenderer.once("get_ip_address", (event, error) => {
+        reject(error);
+      });
+    });
+  };
+
+  const handleEnterPress = async (e) => {
+    if (e.key === "Enter") {
+      setLoading(true);
+      let memberId = inputValue;
+      memberId = memberId.split("#").join("");
+      console.log(memberId);
+      await getIpAddress();
+      console.log("Gl Registry di Hidden Input: ", glRegistryDt);
+      if (memberId === "LOGOUT" || memberId === "logout") {
+        setInputValue("");
+        logoutState();
+        setLoading(false);
+      } else if (memberId === "CLOSING" || memberId === "closing") {
+        setInputValue("");
+        closingState();
+        setLoading(false);
+      } else {
+        await axios
+          .post(
+            `${URL_GATEWAY}/login/loadLoginUser`,
+            {
+              memberId: memberId,
+              ipAddress: stateIpAdd,
+              kodeIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
+              dbStatus: glRegistryDt["glRegistryDt"]["server"],
+            },
+            {
+              headers: {
+                server: glRegistryDt["glRegistryDt"]["server"],
+                registryOraIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
+                registryIp: glRegistryDt["glRegistryDt"]["registryOraIP"],
+                registryPort: glRegistryDt["glRegistryDt"]["registryPort"],
+                registryServiceName:
+                  glRegistryDt["glRegistryDt"]["registryServiceName"],
+                registryUser: glRegistryDt["glRegistryDt"]["registryUser"],
+                registryPwd: glRegistryDt["glRegistryDt"]["registryPwd"],
+                "Cache-Control": "no-cache",
+                "x-api-key": LOGIN_KEY,
+              },
+            }
+          )
+          .then((response) => {
+            console.log(
+              "response get user login: ",
+              response["data"]["data"]["memberFlag"]
+            );
+            if (response["data"]["data"]["memberFlag"] === "Y") {
+              setInputValue("");
+              dispatch(setGlDataUser(response["data"]["data"]));
+              handleNavigate();
+            } else {
+              handleToggleMember();
+              setInputValue("");
+              dispatch(setGlDataUser(response["data"]["data"]));
+              handleNavigate();
+            }
+            setLoading(false);
+          })
+          .catch(function (error) {
+            console.log(error);
+
+            if (error.message === "Network Error") {
+              setMsg("Gagal Terhubung Dengan Gateway");
+            } else {
+              setMsg(error["response"]?.["data"]?.["status"]);
+            }
+
+            setInputValue("");
+            setLoading(false);
+            setOpenModalAlert(true);
+          });
+      }
+    }
+  };
+
+  const refreshApp = () => {
+    ipcRenderer.send("refresh-window");
+  };
+
+  return (
+    <>
+      <Loader loading={loading} />
+      <ModalAlert
+        open={openModalAlert}
+        onClose={() => setOpenModalAlert(false)}
+      >
+        <div className="text-center">
+          <img src={IcErr} alt="Warn" className="mx-auto" />
+          <div className="mx-auto my-4">
+            <h3 className="font-black text-gray-800 text-text">Error</h3>
+            {msg === "Maaf, Sepertinya Terjadi Kesalahan" ? (
+              <>
+                <p
+                  className="mt-5 text-lg text-gray-500"
+                  style={{ wordWrap: "break-word" }}
+                >
+                  {msg}
+                </p>
+                <p
+                  className="mt-1 text-lg text-gray-500"
+                  style={{ wordWrap: "break-word" }}
+                >
+                  Silahkan Tekan Tombol Refresh Lalu Scan Ulang
+                </p>
+
+                <div className="flex gap-4 mt-2">
+                  <button
+                    className="mx-auto btn btn-light"
+                    onClick={refreshApp}
+                  >
+                    <img src={IcRefresh} alt="refresh" className="w-[60px]" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p
+                className="mt-5 text-lg text-gray-500"
+                style={{ wordWrap: "break-word" }}
+              >
+                {msg}
+              </p>
+            )}
+          </div>
+        </div>
+      </ModalAlert>
+      <input
+        type="text"
+        value={inputValue}
+        className="absolute -z-10"
+        onKeyDown={handleEnterPress}
+        autoFocus
+        onBlur={(e) => e.target.focus()}
+        onChange={handleInputChange}
+      />
+    </>
+  );
+}
+
+export default HiddenInput;
