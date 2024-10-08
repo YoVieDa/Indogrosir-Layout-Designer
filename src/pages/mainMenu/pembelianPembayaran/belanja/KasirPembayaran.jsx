@@ -1,7 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import { IcErr, LogoIGR, ICScanToken, IcSucc } from "../../../../assets";
+import {
+  IcErr,
+  LogoIGR,
+  ICScanToken,
+  IcSucc,
+  IcShopeepay,
+  IcArrowBot,
+  IcIsaku,
+  IcGopay,
+} from "../../../../assets";
 import StandardBtn from "../../../../components/StandardBtn";
 import axios from "axios";
 import {
@@ -25,6 +34,20 @@ import Lottie from "lottie-react";
 import { toggleMemberMerah } from "../../../../services/redux/memberReducer";
 
 const { ipcRenderer } = window.require("electron");
+const listPaymentMethod = [
+  {
+    title: "I-SAKU",
+    value: "ISAKU",
+  },
+  {
+    title: "GOPAY",
+    value: "GOPAY",
+  },
+  {
+    title: "SHOPEEPAY",
+    value: "SHOPEEPAY",
+  },
+];
 
 function KasirPembayaran() {
   const dispatch = useDispatch();
@@ -55,7 +78,8 @@ function KasirPembayaran() {
   const [msg, setMsg] = useState("");
   const [errMsgSave, setErrMsgSave] = useState("");
   const [openModalAlert, setOpenModalAlert] = useState(false);
-  const [openModalIsaku, setOpenModalIsaku] = useState(false);
+  const [openModalPayment, setOpenModalPayment] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [alertSucc, setAlertSucc] = useState(false);
   const [getPointGift, setGetPointGift] = useState(false);
@@ -106,13 +130,13 @@ function KasirPembayaran() {
       dispatch(addDtTimeStart(""));
       dispatch(removeAllItems());
       setOpenModalAlert(false);
-      setOpenModalIsaku(false);
+      setOpenModalPayment(false);
     } else {
       navigate("/");
       dispatch(addDtTimeStart(""));
       dispatch(removeAllItems());
       setOpenModalAlert(false);
-      setOpenModalIsaku(false);
+      setOpenModalPayment(false);
       dispatch(toggleMemberMerah());
     }
   };
@@ -231,11 +255,12 @@ function KasirPembayaran() {
   const handleEnterPress = async (e) => {
     if (e.key === "Enter") {
       setLoading(true);
-      if (openModalIsaku === false) {
+      if (openModalPayment === false) {
         setInputValue("");
+        setSelectedPayment("");
         setLoading(false);
       } else {
-        setOpenModalIsaku(false);
+        setOpenModalPayment(false);
         let totalJualHDR =
           glDtHitungTotal[0]["totalNilai"] - glDtHitungTotal[0]["totDisc"];
 
@@ -272,12 +297,13 @@ function KasirPembayaran() {
               transPoint: glDtHitungTotal[0]["transPoint"],
               transAkumulasiPoint: glDtHitungTotal[0]["transAkumulasiPoint"],
               perolehanPoint: glDtHitungTotal[0]["perolehanPoint"],
-              appVersion: "0.2.4",
+              appVersion: "0.2.5",
               potBank: glDtHitungTotal[0]["potBank"],
               pembulatan: pembulatan,
               dtPromosiRaw: glDtHitungTotal[0]["dtPromosiRaw"],
               dtPromosiDtlRaw: glDtHitungTotal[0]["dtPromosiDtlRaw"],
               verificationCode: inputValue.split("#").join(""),
+              selectedPayment: selectedPayment,
               flagFasilitasBank: glDtHitungTotal[0]["flagFasilitasBank"],
               userModul: glUserModul,
               stationModul: glStationModul,
@@ -318,15 +344,15 @@ function KasirPembayaran() {
             const dtToSaveReceipt = {
               receiptDt:
                 response["data"]["strukData2"] + response["data"]["strukData"],
-              path: `\\${response["data"]["isaku"]["stationModul"]}-${response["data"]["tglCurrentForStruk"]}.TXT`,
-              pathSharing: `\\${response["data"]["tglCurrentForStruk"]}\\${response["data"]["isaku"]["stationModul"]}`,
-              pathFile: `\\${response["data"]["tglCurrentForStruk"]}${response["data"]["isaku"]["userModul"]}${response["data"]["noTransaksi"]}S.TXT`,
+              path: `\\${response["data"]["stationModul"]}-${response["data"]["tglCurrentForStruk"]}.TXT`,
+              pathSharing: `\\${response["data"]["tglCurrentForStruk"]}\\${response["data"]["stationModul"]}`,
+              pathFile: `\\${response["data"]["tglCurrentForStruk"]}${response["data"]["userModul"]}${response["data"]["noTransaksi"]}S.TXT`,
             };
 
             const dtToSaveBackup = {
               receiptDt: response["data"]["strTextFile"],
-              path: `\\${response["data"]["tglCurrentForStruk"]}-${response["data"]["isaku"]["stationModul"]}-${response["data"]["isaku"]["userModul"]}-${response["data"]["noTransaksi"]}.TXT`,
-              subFolder: `\\${response["data"]["tglCurrentForStruk"]}-${response["data"]["isaku"]["stationModul"]}-${response["data"]["isaku"]["userModul"]}`,
+              path: `\\${response["data"]["tglCurrentForStruk"]}-${response["data"]["stationModul"]}-${response["data"]["userModul"]}-${response["data"]["noTransaksi"]}.TXT`,
+              subFolder: `\\${response["data"]["tglCurrentForStruk"]}-${response["data"]["stationModul"]}-${response["data"]["userModul"]}`,
             };
 
             ipcRenderer.send("save_backuppos", dtToSaveBackup);
@@ -376,6 +402,11 @@ function KasirPembayaran() {
           });
       }
     }
+  };
+
+  const handleSelectedPayment = async (selectedPaymentParam) => {
+    setSelectedPayment(selectedPaymentParam);
+    setOpenModalPayment(true);
   };
 
   const handleInputChange = (event) => {
@@ -468,16 +499,19 @@ function KasirPembayaran() {
         </div>
       </ModalAlert>
       <Modal
-        open={openModalIsaku}
+        open={openModalPayment}
         customWidth={80}
-        onClose={() => setOpenModalIsaku(false)}
+        onClose={() => {
+          setOpenModalPayment(false);
+          setSelectedPayment("");
+        }}
         landscape={isLandscape}
       >
         <div
           className={`${memberMerah ? "bg-red" : "bg-blue"} rounded-t-xl p-5`}
         >
           <p className="font-semibold text-center text-white text-subTitle">
-            {"I-SAKU"}
+            {selectedPayment === "ISAKU" ? "I-SAKU" : selectedPayment}
           </p>
         </div>
         <div
@@ -508,7 +542,12 @@ function KasirPembayaran() {
               isLandscape ? "text-subTitle" : "text-title"
             }`}
           >
-            {"Silahkan Scan"} {<br />} {"Token I-SAKU Anda!"}
+            {"Silahkan Scan"} {<br />}{" "}
+            {` ${
+              selectedPayment === "ISAKU"
+                ? `Token I-SAKU Anda`
+                : `QR ${selectedPayment} Anda`
+            }`}
           </p>
           <Lottie
             animationData={ICScanToken}
@@ -524,20 +563,27 @@ function KasirPembayaran() {
         className={`flex flex-col p-10 ${memberMerah ? "bg-red" : "bg-blue"}`}
       >
         {isLandscape ? (
-          <div className="flex flex-row items-center gap-5 mb-auto">
+          <div className="flex flex-row items-center justify-between gap-5 mb-auto">
             <img
               src={LogoIGR}
               alt="Logo IGR"
-              className="drop-shadow-lg rounded mb-10 w-[544px] h-[186px]"
+              className="drop-shadow-lg rounded h-[150px]"
             />
             <p className="font-bold text-white text-title ">Menu Pembayaran</p>
+
+            <StandardBtn
+              title="Kembali"
+              path="/kasirSelfService"
+              width="20%"
+              pembayaran={true}
+            />
           </div>
         ) : (
           <>
             <img
               src={LogoIGR}
               alt="Logo IGR"
-              className="drop-shadow-lg rounded w-[544px] h-[186px] self-center"
+              className="drop-shadow-lg rounded h-[186px] self-center"
             />
 
             <p className="mt-10 mb-10 font-bold text-center text-white text-subTitle">
@@ -545,7 +591,7 @@ function KasirPembayaran() {
             </p>
           </>
         )}
-        <div className="w-[100%] flex flex-col bg-gray-100 rounded-[20px] mb-auto p-10">
+        <div className="w-[100%] flex flex-col bg-gray-100 rounded-[20px] mb-5 p-10">
           <div className="flex flex-row justify-between gap-5 align-middle">
             <p className="font-semibold text-text">Total Nilai: </p>
             <p className="text-text">
@@ -575,18 +621,51 @@ function KasirPembayaran() {
             </div>
           </div>
         </div>
+        <div className="flex flex-col gap-5 mt-5 mb-auto">
+          <p className="font-bold text-center text-white text-subTitle">
+            Silahkan pilih metode pembayaran yang diinginkan
+          </p>
+          <div
+            className={`flex ${
+              isLandscape ? "flex-row justify-center " : "flex-col "
+            } items-center gap-5 mb-10`}
+          >
+            {listPaymentMethod.map((item, itemIndex) => (
+              <button
+                onClick={() => handleSelectedPayment(item.value)}
+                className={`${
+                  isLandscape ? "w-[20%] " : "w-[40%]"
+                } h-[180px] flex justify-center items-center flex-row  rounded-xl bg-stroke-white p-3 bg-white transform transition duration-200 active:scale-90`}
+              >
+                <img
+                  src={
+                    item.value === "ISAKU"
+                      ? IcIsaku
+                      : item.value === "SHOPEEPAY"
+                      ? IcShopeepay
+                      : IcGopay
+                  }
+                  alt=""
+                  className="  h-[75%] rounded-xl "
+                />
+                {/* {item.title} */}
+              </button>
+            ))}
+          </div>
+        </div>
         <div
           className={`flex flex-row self-center items-center gap-5 ${
             isLandscape ? "w-[50%]" : "w-[100%]"
           }`}
         >
-          <StandardBtn
-            title="Kembali"
-            path="/kasirSelfService"
-            width="50%"
-            pembayaran={true}
-          />
-
+          {!isLandscape && (
+            <StandardBtn
+              title="Kembali"
+              path="/kasirSelfService"
+              width="100%"
+              pembayaran={true}
+            />
+          )}
           {/* <StandardBtn
             title="Cek Promo MKT"
             path="/pembelianPembayaranMenu"
@@ -594,12 +673,12 @@ function KasirPembayaran() {
             pos={true}
           /> */}
 
-          <button
-            onClick={() => setOpenModalIsaku(true)}
+          {/* <button
+            onClick={() => setOpenModalPayment(true)}
             className={`w-[50%] h-[96px] rounded-xl bg-stroke-white bg-blue p-3 text-subText font-bold text-white transform transition duration-200 active:scale-90 bg-gradient-to-t from-blue to-blue3`}
           >
             Lanjutkan Pembayaran
-          </button>
+          </button> */}
         </div>
       </div>
     </>

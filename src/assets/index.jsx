@@ -52,6 +52,11 @@ import IcShoppingMM from "./icons/Menu Pembelian dan Pembayaran MM/ic-shopping-m
 // Operator
 import IcTelkom from "./icons/Operator/ic-telkomsel.png";
 
+// Payment Logo
+import IcShopeepay from "./icons/Payment Logo/ic-shopeepay.png";
+import IcIsaku from "./icons/Payment Logo/ic-isaku.jpg";
+import IcGopay from "./icons/Payment Logo/ic-gopay.png";
+
 // -------------------------------------------
 import IcArrowBot from "./icons/ic-arrow-bottom.png";
 import IcArrowLeft from "./icons/ic-arrow-left.png";
@@ -93,6 +98,9 @@ import LogoIGR from "./LogoIGR.png";
 // Header IGR
 
 export {
+  IcShopeepay,
+  IcGopay,
+  IcIsaku,
   IcNotFoundMM,
   IcNotFoundMB,
   ICScanToken,

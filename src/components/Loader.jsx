@@ -1,7 +1,9 @@
 import React from "react";
+import { useSelector } from "react-redux";
 import ClipLoader from "react-spinners/ClipLoader";
 
 function Loader({ merah, loading, nobg }) {
+  const memberMerah = useSelector((state) => state.memberState.memberMerah);
   return (
     <>
       {!nobg ? (
@@ -11,16 +13,17 @@ function Loader({ merah, loading, nobg }) {
           } transition-colors  z-50`}
         >
           <ClipLoader
-            color={!merah ? "#0079C2" : "#e51a23"}
+            color={memberMerah ? "#0079C2" : "#e51a23"}
             loading={loading}
             size={150}
             aria-label="Loading Spinner"
             data-testid="loader"
+            borderWidth={10}
           />
         </div>
       ) : (
         <ClipLoader
-          color={!merah ? "#0079C2" : "#e51a23"}
+          color={memberMerah ? "#0079C2" : "#e51a23"}
           loading={loading}
           size={150}
           aria-label="Loading Spinner"
