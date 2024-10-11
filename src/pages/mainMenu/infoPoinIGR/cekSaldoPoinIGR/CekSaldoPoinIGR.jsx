@@ -271,14 +271,21 @@ function CekSaldoPoinIGR() {
       .then(async (response) => {
         console.log(response);
         // Mengubah string menjadi objek Date
-        const parsedDate = parse(
-          response["data"]["data"],
-          "dd-MMMM-yyyy",
-          new Date()
-        );
+        // const parsedDate = parse(
+        //   response["data"]["data"],
+        //   "dd-MMMM-yyyy",
+        //   new Date()
+        // );
+
+        const rawDate = response["data"]["data"];
+        // const cleanedDate = rawDate.replace(/\s+/g, " "); // Menghapus spasi berlebih
+        // const parsedDate = parse(cleanedDate, "dd-MMMM-yyyy", new Date());
+
+        // console.log(parsedDate);
 
         // Memformat tanggal ke dalam format dd/MM/yyyy
-        const formattedDate = format(parsedDate, "dd/MM/yyyy");
+        // const formattedDate = format(rawDate, "dd/MM/yyyy");
+        const formattedDate = rawDate;
 
         let strukData = "";
         let tglTemp = "Tgl " + formattedDate;
