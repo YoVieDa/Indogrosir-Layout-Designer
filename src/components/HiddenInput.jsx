@@ -23,6 +23,7 @@ function HiddenInput({ closingState, logoutState }) {
   const glRegistryDt = useSelector(
     (state) => state.glRegistry.dtDecryptedRegistry
   );
+  const glUserModul = useSelector((state) => state.glUser.userModul);
   const navigate = useNavigate();
   const handleNavigate = () => {
     navigate("/mainmenu");
@@ -81,6 +82,7 @@ function HiddenInput({ closingState, logoutState }) {
               memberId: memberId,
               ipAddress: stateIpAdd,
               kodeIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
+              dtUserModul: glUserModul,
               dbStatus: glRegistryDt["glRegistryDt"]["server"],
             },
             {
