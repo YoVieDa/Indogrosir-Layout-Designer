@@ -3,7 +3,7 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import ModalAlert from "./ModalAlert";
-import { IcErr, IcRefresh, IcWarn } from "../assets";
+import { IcErr, IcInfoBlack, IcRefresh, IcWarn } from "../assets";
 import Loader from "./Loader";
 import { PAYMENT_KEY, URL_GATEWAY } from "../config.js";
 import { replaceArray } from "../services/redux/dtAllInputtedItemReducer";
@@ -17,6 +17,7 @@ function HiddenInputForPOS() {
   const [msg, setMsg] = useState("");
   const [alertErrTitle, setAlertErrTitle] = useState(true);
   const [alertErrIc, setAlertErrIc] = useState(true);
+  const [alertInfo, setAlertInfo] = useState(false);
   const glRegistryDt = useSelector(
     (state) => state.glRegistry.dtDecryptedRegistry
   );
@@ -175,12 +176,22 @@ function HiddenInputForPOS() {
         })
         .catch(function (error) {
           console.log(error);
+          if (
+            error["response"]["data"]["status"].includes("Gagal Ambil Data")
+          ) {
+            setMsg(error["response"]["data"]["status"]);
 
-          setMsg(error["response"]["data"]["status"]);
+            setInputValue("");
+            setLoading(false);
+            setOpenModalAlert(true);
+          } else {
+            setMsg(error["response"]["data"]["status"]);
 
-          setInputValue("");
-          setLoading(false);
-          setOpenModalAlert(true);
+            setInputValue("");
+            setLoading(false);
+            setOpenModalAlert(true);
+            setAlertInfo(true);
+          }
         });
     }
   };
@@ -198,19 +209,30 @@ function HiddenInputForPOS() {
           setOpenModalAlert(false);
           setAlertErrTitle(true);
           setAlertErrIc(true);
+          setAlertInfo(false);
           navigate("/kasirSelfService");
         }}
       >
         <div className="text-center">
           <img
-            src={alertErrIc ? IcErr : IcWarn}
+            src={
+              alertErrIc && !alertInfo
+                ? IcErr
+                : alertErrTitle && alertInfo
+                ? IcInfoBlack
+                : IcWarn
+            }
             alt="Warn"
             className="mx-auto"
           />
           <div className="mx-auto my-4">
             <h3 className="font-black text-gray-800 text-text">
               {" "}
-              {alertErrTitle ? "Error" : "Warning"}
+              {alertErrTitle && !alertInfo
+                ? "Error"
+                : alertErrTitle && alertInfo
+                ? "Info"
+                : "Warning"}
             </h3>
             {msg === "Maaf, Sepertinya Terjadi Kesalahan" ? (
               <>

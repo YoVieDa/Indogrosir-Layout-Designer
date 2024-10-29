@@ -10,6 +10,7 @@ import {
   IcArrowBot,
   IcIsaku,
   IcGopay,
+  IcInfoBlack,
 } from "../../../../assets";
 import StandardBtn from "../../../../components/StandardBtn";
 import axios from "axios";
@@ -82,6 +83,7 @@ function KasirPembayaran() {
   const [selectedPayment, setSelectedPayment] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [alertSucc, setAlertSucc] = useState(false);
+  const [alertInfo, setAlertInfo] = useState(false);
   const [getPointGift, setGetPointGift] = useState(false);
   const [getPointMsg, setGetPointMsg] = useState("");
   const [getGiftMsg, setGetGiftMsg] = useState("");
@@ -285,19 +287,21 @@ function KasirPembayaran() {
               noTransaksi: glDtDocInfo,
               timeStart: glDtTimeStart,
               timeEnd: glDtHitungTotal[0]["retTimeEnd"],
-              total: glDtHitungTotal[0]["jumlahPenjualan"],
-              totalJualHDR: totalJualHDR,
+              total: Math.round(Number(glDtHitungTotal[0]["jumlahPenjualan"])),
+              totalJualHDR: Math.round(Number(totalJualHDR)),
               dtDtlBrng: glDtHitungTotal[0]["dtDtlBrngUpdate"],
               dtCashback: glDtHitungTotal[0]["dtCashback"],
               dtGift: glDtHitungTotal[0]["dtGift"],
               dtInputtedItem: dtAllItem,
-              totDiscount: glDtHitungTotal[0]["totDisc"],
-              totCashback: glDtHitungTotal[0]["totCashback"],
+              totDiscount: Math.round(Number(glDtHitungTotal[0]["totDisc"])),
+              totCashback: Math.round(
+                Number(glDtHitungTotal[0]["totCashback"])
+              ),
               totDiscountPercent: 0,
               transPoint: glDtHitungTotal[0]["transPoint"],
               transAkumulasiPoint: glDtHitungTotal[0]["transAkumulasiPoint"],
               perolehanPoint: glDtHitungTotal[0]["perolehanPoint"],
-              appVersion: "0.2.5",
+              appVersion: "0.2.6",
               potBank: glDtHitungTotal[0]["potBank"],
               pembulatan: pembulatan,
               dtPromosiRaw: glDtHitungTotal[0]["dtPromosiRaw"],
@@ -394,11 +398,20 @@ function KasirPembayaran() {
           })
           .catch(function (error) {
             console.log(error);
-
-            setMsg(error["response"]["data"]["status"]);
-            setLoading(false);
-            setInputValue("");
-            setOpenModalAlert(true);
+            if (
+              error["response"]["data"]["status"].includes("Gagal Ambil Data")
+            ) {
+              setMsg(error["response"]["data"]["status"]);
+              setLoading(false);
+              setInputValue("");
+              setOpenModalAlert(true);
+            } else {
+              setMsg(error["response"]["data"]["status"]);
+              setLoading(false);
+              setInputValue("");
+              setOpenModalAlert(true);
+              setAlertInfo(true);
+            }
           });
       }
     }
@@ -420,7 +433,7 @@ function KasirPembayaran() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     })
-      .format(number)
+      .format(Math.round(number)) // Membulatkan angka sebelum diformat
       .replace(/\./g, ",");
   };
 
@@ -445,18 +458,29 @@ function KasirPembayaran() {
           setInputValue("");
           setAlertSucc(false);
           setGetPointGift(false);
+          setAlertInfo(false);
           alertSucc ? handleNavigate() : navigate("/kasirSelfService");
         }}
       >
         <div className="text-center">
           <img
-            src={alertSucc ? IcSucc : IcErr}
+            src={
+              alertSucc && !alertInfo
+                ? IcSucc
+                : !alertSucc && alertInfo
+                ? IcInfoBlack
+                : IcErr
+            }
             alt="Warn"
             className="mx-auto"
           />
           <div className="mx-auto my-4">
             <h3 className="font-bold text-subTitle">
-              {alertSucc ? "Success" : "Error"}
+              {alertSucc && !alertInfo
+                ? "Success"
+                : !alertSucc && alertInfo
+                ? "Info"
+                : "Error"}
             </h3>
 
             <p

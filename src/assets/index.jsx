@@ -77,6 +77,7 @@ import NoImageLandscape from "./no-image-landscape.jpg";
 import NoImagePortrait from "./no-image-portrait.png";
 import IcLogout from "./icons/ic-logout.png";
 import IcInfo from "./icons/ic-info.png";
+import IcInfoBlack from "./icons/ic-info-black.png";
 
 // Background
 import BgLogin from "./bg-login.png";
@@ -119,6 +120,7 @@ export {
   IcInfoPoinMM,
   IcPaymentMM,
   IcInfoPromoLainMM,
+  IcInfoBlack,
   IcJumlahSkorMB,
   IcPenukaranMB,
   IcPestaMB,
