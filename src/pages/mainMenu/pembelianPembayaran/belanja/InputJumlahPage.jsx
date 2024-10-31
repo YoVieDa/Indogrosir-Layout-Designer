@@ -449,7 +449,9 @@ function InputJumlahPage() {
                 isLandscape ? "mb-5" : "mb-5"
               }`}
             >
-              Silahkan input jumlah barang
+              {inputTambah
+                ? "Silakan masukkan jumlah barang yang ingin ditambahkan"
+                : "Silahkan masukkan jumlah barang yang ingin dikurangi"}
             </p>
             <div className="flex flex-col h-[100%] items-center justify-center gap-5">
               {isLandscape ? null : (
@@ -498,7 +500,7 @@ function InputJumlahPage() {
                 <input
                   value={input}
                   type="number"
-                  placeholder="Input Jumlah Barang"
+                  placeholder="Masukkan Jumlah Barang"
                   onChange={handleChange}
                   className={`border bg-stroke-white p-5 rounded-xl ${
                     isLandscape ? "w-[40%]" : "w-[70%]"

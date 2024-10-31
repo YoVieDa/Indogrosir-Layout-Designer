@@ -301,7 +301,7 @@ function KasirPembayaran() {
               transPoint: glDtHitungTotal[0]["transPoint"],
               transAkumulasiPoint: glDtHitungTotal[0]["transAkumulasiPoint"],
               perolehanPoint: glDtHitungTotal[0]["perolehanPoint"],
-              appVersion: "0.2.6",
+              appVersion: "0.2.7",
               potBank: glDtHitungTotal[0]["potBank"],
               pembulatan: pembulatan,
               dtPromosiRaw: glDtHitungTotal[0]["dtPromosiRaw"],
@@ -347,7 +347,9 @@ function KasirPembayaran() {
 
             const dtToSaveReceipt = {
               receiptDt:
-                response["data"]["strukData2"] + response["data"]["strukData"],
+                response["data"]["strukData2"] +
+                response["data"]["strukData"] +
+                response["data"]["sFooter"],
               path: `\\${response["data"]["stationModul"]}-${response["data"]["tglCurrentForStruk"]}.TXT`,
               pathSharing: `\\${response["data"]["tglCurrentForStruk"]}\\${response["data"]["stationModul"]}`,
               pathFile: `\\${response["data"]["tglCurrentForStruk"]}${response["data"]["userModul"]}${response["data"]["noTransaksi"]}S.TXT`,
@@ -366,6 +368,7 @@ function KasirPembayaran() {
             const dtToPrint = {
               kodeIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
               strukData: response["data"]["strukData"],
+              strukDataFooter: response["data"]["sFooter"],
               numberOfQrStruk: response["data"]["numberOfQrStruk"],
               printerName:
                 glRegistryDt["glRegistryDt"]["registryPrnName"] !== null &&

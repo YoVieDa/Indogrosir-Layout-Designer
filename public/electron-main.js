@@ -44,17 +44,17 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   }
 
-  // // Menonaktifkan DevTools
-  // mainWindow.webContents.on("devtools-opened", () => {
-  //   mainWindow.webContents.closeDevTools();
-  // });
+  // Menonaktifkan DevTools
+  mainWindow.webContents.on("devtools-opened", () => {
+    mainWindow.webContents.closeDevTools();
+  });
 
-  // // Menonaktifkan shortcut untuk membuka DevTools
-  // app.whenReady().then(() => {
-  //   globalShortcut.register("Control+Shift+I", () => {
-  //     // menonaktifkan aksi dari shortcut
-  //   });
-  // });
+  // Menonaktifkan shortcut untuk membuka DevTools
+  app.whenReady().then(() => {
+    globalShortcut.register("Control+Shift+I", () => {
+      // menonaktifkan aksi dari shortcut
+    });
+  });
 }
 
 app.whenReady().then(() => {
@@ -679,6 +679,25 @@ ipcMain.on("print_receipt_belanja", (event, arg) => {
     {
       type: "text",
       value: "\n\n", // Tambahkan spasi atau baris kosong sebelum pemotongan
+      style: {
+        fontFamily: "Courier, monospace", // Mengatur font ke Courier atau monospace lain
+        whiteSpace: "pre", // Menjaga spasi dan baris baru
+        fontSize: "10px",
+      },
+    },
+    {
+      type: "text", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
+      value: arg.strukDataFooter,
+      style: {
+        fontFamily: "Courier, monospace", // Mengatur font ke Courier atau monospace lain
+        whiteSpace: "pre", // Menjaga spasi dan baris baru
+        fontSize: "10px",
+        fontWeight: "700",
+      },
+    },
+    {
+      type: "text",
+      value: "\n", // Tambahkan spasi atau baris kosong sebelum pemotongan
       style: {
         fontFamily: "Courier, monospace", // Mengatur font ke Courier atau monospace lain
         whiteSpace: "pre", // Menjaga spasi dan baris baru
