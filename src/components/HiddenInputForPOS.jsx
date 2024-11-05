@@ -30,7 +30,7 @@ function HiddenInputForPOS() {
 
   const handleInputChange = (e) => {
     // Mengupdate nilai state saat input berubah
-    setInputValue(e.target.value);
+    setInputValue(e.target.value.split("#").join(""));
   };
 
   const handleEnterPress = async (e) => {

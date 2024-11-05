@@ -44,17 +44,17 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   }
 
-  // Menonaktifkan DevTools
-  mainWindow.webContents.on("devtools-opened", () => {
-    mainWindow.webContents.closeDevTools();
-  });
+  // // Menonaktifkan DevTools
+  // mainWindow.webContents.on("devtools-opened", () => {
+  //   mainWindow.webContents.closeDevTools();
+  // });
 
-  // Menonaktifkan shortcut untuk membuka DevTools
-  app.whenReady().then(() => {
-    globalShortcut.register("Control+Shift+I", () => {
-      // menonaktifkan aksi dari shortcut
-    });
-  });
+  // // Menonaktifkan shortcut untuk membuka DevTools
+  // app.whenReady().then(() => {
+  //   globalShortcut.register("Control+Shift+I", () => {
+  //     // menonaktifkan aksi dari shortcut
+  //   });
+  // });
 }
 
 app.whenReady().then(() => {
@@ -190,6 +190,31 @@ ipcMain.on("get_ip_address", (event, arg) => {
         networkInterfaces["Local Area Connection 2"][i]["family"] === "IPv4"
       ) {
         address = networkInterfaces["Local Area Connection 2"][i]["address"];
+      }
+    }
+  } else if (networkInterfaces["Local Area Connection 3"]) {
+    for (
+      let i = 0;
+      i < networkInterfaces["Local Area Connection 3"].length;
+      i++
+    ) {
+      if (
+        networkInterfaces["Local Area Connection 3"][i]["family"] === "IPv4"
+      ) {
+        address = networkInterfaces["Local Area Connection 3"][i]["address"];
+      }
+    }
+  } else if (networkInterfaces["Wireless Network Connection"]) {
+    for (
+      let i = 0;
+      i < networkInterfaces["Wireless Network Connection"].length;
+      i++
+    ) {
+      if (
+        networkInterfaces["Wireless Network Connection"][i]["family"] === "IPv4"
+      ) {
+        address =
+          networkInterfaces["Wireless Network Connection"][i]["address"];
       }
     }
   } else {

@@ -301,7 +301,7 @@ function KasirPembayaran() {
               transPoint: glDtHitungTotal[0]["transPoint"],
               transAkumulasiPoint: glDtHitungTotal[0]["transAkumulasiPoint"],
               perolehanPoint: glDtHitungTotal[0]["perolehanPoint"],
-              appVersion: "0.2.7",
+              appVersion: "0.2.8",
               potBank: glDtHitungTotal[0]["potBank"],
               pembulatan: pembulatan,
               dtPromosiRaw: glDtHitungTotal[0]["dtPromosiRaw"],
