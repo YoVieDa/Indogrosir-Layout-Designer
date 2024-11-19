@@ -164,6 +164,12 @@ ipcMain.on("get_ip_address", (event, arg) => {
         address = networkInterfaces["Ethernet"][i]["address"];
       }
     }
+  } else if (networkInterfaces["Ethernet 2"]) {
+    for (let i = 0; i < networkInterfaces["Ethernet 2"].length; i++) {
+      if (networkInterfaces["Ethernet 2"][i]["family"] === "IPv4") {
+        address = networkInterfaces["Ethernet 2"][i]["address"];
+      }
+    }
   } else if (networkInterfaces["WiFi"]) {
     for (let i = 0; i < networkInterfaces["WiFi"].length; i++) {
       if (networkInterfaces["WiFi"][i]["family"] === "IPv4") {

@@ -109,11 +109,11 @@ function LoginPSS() {
   const onChangeInput = (event, inputType) => {
     const input = event.target.value;
     if (inputType === "user") {
-      setInputUser(input);
+      setInputUser(input.toString().toUpperCase());
     } else if (inputType === "password") {
-      setInputPassword(input);
+      setInputPassword(input.toString().toUpperCase());
     }
-    keyboard.current.setInput(input);
+    keyboard.current.setInput(input.toString().toUpperCase());
   };
 
   const onChangeAll = (input) => {
