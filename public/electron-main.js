@@ -158,7 +158,13 @@ ipcMain.on("get_ip_address", (event, arg) => {
   var address;
 
   // console.log(networkInterfaces);
-  if (networkInterfaces["Ethernet"]) {
+  if (networkInterfaces["Wi-Fi"]) {
+    for (let i = 0; i < networkInterfaces["Wi-Fi"].length; i++) {
+      if (networkInterfaces["Wi-Fi"][i]["family"] === "IPv4") {
+        address = networkInterfaces["Wi-Fi"][i]["address"];
+      }
+    }
+  } else if (networkInterfaces["Ethernet"]) {
     for (let i = 0; i < networkInterfaces["Ethernet"].length; i++) {
       if (networkInterfaces["Ethernet"][i]["family"] === "IPv4") {
         address = networkInterfaces["Ethernet"][i]["address"];
