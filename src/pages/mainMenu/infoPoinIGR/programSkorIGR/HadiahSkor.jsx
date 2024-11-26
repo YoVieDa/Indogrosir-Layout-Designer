@@ -92,7 +92,7 @@ function ProgramSkorIGR() {
       setLoading(true);
       await axios
         .get(
-          `${URL_GATEWAY}/servicePoin/getHadiahSkor?memberId=${userDt["memberID"]}&kodeScore=${dtGlInfoSkor["dtInfoSkorForGl"]["SK_KODESCORE"]}`,
+          `${URL_GATEWAY}/servicePoin/getHadiahSkor?memberId=${userDt["memberID"]}&kodeScore=${dtGlInfoSkor["dtInfoSkorForGl"]["sk_kodescore"]}`,
           {
             headers: {
               server: glRegistryDt["glRegistryDt"]["server"],
@@ -320,7 +320,7 @@ function ProgramSkorIGR() {
                 <SwiperSlide className="max-w-[661.56px]">
                   <div
                     key={itemIndex}
-                    className={`flex flex-col h-[300px] w-[100%] mb-10 group relative shadow-lg bg-stroke bg-red text-white rounded-xl overflow-hidden cursor-pointer`}
+                    className={`flex flex-col h-[300px] justify-center mb-10 group relative shadow-lg bg-stroke bg-red text-white rounded-xl overflow-hidden cursor-pointer`}
                   >
                     <img
                       src={item !== "" ? item : NoImageLandscape}
