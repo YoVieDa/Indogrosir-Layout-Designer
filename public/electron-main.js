@@ -1,4 +1,10 @@
-const { app, BrowserWindow, ipcMain, globalShortcut } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  globalShortcut,
+  dialog,
+} = require("electron");
 const path = require("path");
 const isDev = require("electron-is-dev");
 // const { list, createKey, putValue, RegSzValue } = require("regedit-rs");
@@ -439,6 +445,10 @@ ipcMain.on("save_receipt", async (event, receipt) => {
       fs.mkdirSync(saveDirectory, { recursive: true });
       console.log("Direktori berhasil dibuat:", saveDirectory);
     } catch (err) {
+      dialog.showErrorBox(
+        "Error",
+        `Failed to save receipt txt:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
+      );
       console.error("Error creating directory:", err);
       event.reply("receiptSaveError", err.message);
       return; // Hentikan proses jika terjadi kesalahan dalam pembuatan direktori
@@ -457,6 +467,10 @@ ipcMain.on("save_receipt", async (event, receipt) => {
       console.log("File baru berhasil disimpan:", savePath);
     }
   } catch (err) {
+    dialog.showErrorBox(
+      "Error",
+      `Failed to save receipt txt:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
+    );
     console.error("Error saving file:", err);
     event.reply("savingFileError", err.message);
     return;
@@ -478,6 +492,10 @@ ipcMain.on("save_receiptpos", async (event, receipt) => {
       fs.mkdirSync(saveDirectory, { recursive: true });
       console.log("Direktori berhasil dibuat:", saveDirectory);
     } catch (err) {
+      dialog.showErrorBox(
+        "Error",
+        `Failed to save receipt pos txt:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
+      );
       console.error("Error creating directory:", err);
       event.reply("receiptSaveError", err.message);
       return; // Hentikan proses jika terjadi kesalahan dalam pembuatan direktori
@@ -496,6 +514,10 @@ ipcMain.on("save_receiptpos", async (event, receipt) => {
       console.log("File baru berhasil disimpan:", savePath);
     }
   } catch (err) {
+    dialog.showErrorBox(
+      "Error",
+      `Failed to save receipt pos txt:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
+    );
     console.error("Error saving file:", err);
     event.reply("savingFileError", err.message);
     return;
@@ -516,6 +538,10 @@ ipcMain.on("save_receiptpos_sharing", async (event, receipt) => {
       console.log("Direktori backup utama berhasil dibuat:", saveDirectory);
       event.sender.send("save_receiptpos_sharing", "success");
     } catch (err) {
+      dialog.showErrorBox(
+        "Error",
+        `Failed to save receipt pos sharing txt:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
+      );
       console.error("Error creating main backup directory:", err);
       let errorMessage = `Gagal menyimpan file. . Error: ${err.message}`;
       event.sender.send("save_receiptpos_sharing", errorMessage);
@@ -531,6 +557,10 @@ ipcMain.on("save_receiptpos_sharing", async (event, receipt) => {
       console.log("Direktori tanggal berhasil dibuat:", subFolderPath);
       event.sender.send("save_receiptpos_sharing", "success");
     } catch (err) {
+      dialog.showErrorBox(
+        "Error",
+        `Failed to save receipt pos sharing txt:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
+      );
       console.error("Error creating date folder:", err);
       console.error("Error:", err);
       let errorMessage = `Gagal menyimpan file. . Error: ${err.message}`;
@@ -558,6 +588,10 @@ ipcMain.on("save_receiptpos_sharing", async (event, receipt) => {
     }
   } catch (err) {
     console.error("Error:", err);
+    dialog.showErrorBox(
+      "Error",
+      `Failed to save receipt pos sharing txt:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
+    );
     let errorMessage = `Gagal menyimpan file. Error: ${err.message}`;
     event.sender.send("save_receiptpos_sharing", errorMessage);
     return;
@@ -617,6 +651,10 @@ ipcMain.on("save_backuppos", async (event, receipt) => {
       console.log("Direktori backup utama berhasil dibuat:", saveDirectory);
     } catch (err) {
       console.error("Error creating main backup directory:", err);
+      dialog.showErrorBox(
+        "Error",
+        `Failed to save backup pos:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
+      );
       event.reply("save_backuppos", err.message);
       return; // Hentikan proses jika terjadi kesalahan dalam pembuatan direktori
     }
@@ -629,6 +667,10 @@ ipcMain.on("save_backuppos", async (event, receipt) => {
       fs.mkdirSync(subFolderPath, { recursive: true });
       console.log("Direktori tanggal berhasil dibuat:", subFolderPath);
     } catch (err) {
+      dialog.showErrorBox(
+        "Error",
+        `Failed to save backup pos:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
+      );
       console.error("Error creating date folder:", err);
       event.reply("save_backuppos", err.message);
       return; // Hentikan proses jika terjadi kesalahan dalam pembuatan folder tanggal
@@ -643,6 +685,10 @@ ipcMain.on("save_backuppos", async (event, receipt) => {
     fs.writeFileSync(savePath, receipt.receiptDt);
     console.log("File baru berhasil disimpan:", savePath);
   } catch (err) {
+    dialog.showErrorBox(
+      "Error",
+      `Failed to save backup pos:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
+    );
     console.error("Error saving file:", err);
     event.reply("save_backuppos", err.message);
   }
@@ -665,7 +711,13 @@ ipcMain.on("print_receipt", (event, arg) => {
   if (data) {
     PosPrinter.print(data, options)
       .then(console.log)
-      .catch((error) => console.log(error));
+      .catch((error) => {
+        dialog.showErrorBox(
+          "Error",
+          `Failed to print receipt:\n\n${error.message}\n\nStack Trace:\n${error.stack}`
+        );
+        console.log(error);
+      });
   }
 });
 
@@ -681,21 +733,21 @@ ipcMain.on("print_receipt_belanja", (event, arg) => {
   };
 
   const data = [
-    {
-      type: "image", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
-      path: path.join(
-        __dirname,
-        "..",
-        "..",
-        "public",
-        "images",
-        "Header IGR",
-        `${arg.kodeIGR}.jpg`
-      ),
-      position: "left",
-      width: "250px",
-      height: "100px",
-    },
+    // {
+    //   type: "image", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
+    //   path: path.join(
+    //     __dirname,
+    //     "..",
+    //     "..",
+    //     "public",
+    //     "images",
+    //     "Header IGR",
+    //     `${arg.kodeIGR}.jpg`
+    //   ),
+    //   position: "left",
+    //   width: "250px",
+    //   height: "100px",
+    // },
     {
       type: "text", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
       value: arg.strukData,
@@ -748,6 +800,10 @@ ipcMain.on("print_receipt_belanja", (event, arg) => {
     PosPrinter.print(data, options)
       .then(console.log)
       .catch((error) => {
+        dialog.showErrorBox(
+          "Error",
+          `Failed to print transaction receipt:\n\n${error.message}\n\nStack Trace:\n${error.stack}`
+        );
         console.log(error);
       });
   }
@@ -797,6 +853,10 @@ ipcMain.on("print_closing", (event, arg) => {
     PosPrinter.print(data, options)
       .then(console.log)
       .catch((error) => {
+        dialog.showErrorBox(
+          "Error",
+          `Failed to print closing receipt:\n\n${error.message}\n\nStack Trace:\n${error.stack}`
+        );
         console.log(error);
       });
   }
@@ -822,6 +882,10 @@ ipcMain.on("backup_zip", (event, folderPath, outputPath) => {
     fs.rmSync(folderPath, { recursive: true, force: true });
     console.log(`Folder ${folderPath} telah dihapus.`);
   } catch (err) {
+    dialog.showErrorBox(
+      "Error",
+      `Failed to zip backup:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
+    );
     console.error("Gagal mengompres folder:", err);
   }
 });

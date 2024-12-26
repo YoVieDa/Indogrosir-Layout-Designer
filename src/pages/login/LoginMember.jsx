@@ -828,7 +828,7 @@ function LoginMember() {
           </div>
         </div>
         <p className="absolute z-10 text-white bottom-4 left-4 text-subText">
-          V 1.1.0.0
+          V 1.2.0
         </p>
       </div>
     </>
