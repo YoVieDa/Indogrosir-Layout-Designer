@@ -56,6 +56,7 @@ import IcTelkom from "./icons/Operator/ic-telkomsel.png";
 import IcShopeepay from "./icons/Payment Logo/ic-shopeepay.png";
 import IcIsaku from "./icons/Payment Logo/ic-isaku.jpg";
 import IcGopay from "./icons/Payment Logo/ic-gopay.png";
+import IcBca from "./icons/Payment Logo/ic-bca.png";
 
 // -------------------------------------------
 import IcArrowBot from "./icons/ic-arrow-bottom.png";
@@ -172,4 +173,5 @@ export {
   IcPemenangMM,
   IcShoppingMB,
   IcShoppingMM,
+  IcBca,
 };

@@ -11,6 +11,7 @@ import {
   IcIsaku,
   IcGopay,
   IcInfoBlack,
+  IcBca,
 } from "../../../../assets";
 import StandardBtn from "../../../../components/StandardBtn";
 import axios from "axios";
@@ -47,6 +48,10 @@ const listPaymentMethod = [
   {
     title: "SHOPEEPAY",
     value: "SHOPEEPAY",
+  },
+  {
+    title: "QRIS-BCA",
+    value: "QRISBCA",
   },
 ];
 
@@ -301,7 +306,7 @@ function KasirPembayaran() {
               transPoint: glDtHitungTotal[0]["transPoint"],
               transAkumulasiPoint: glDtHitungTotal[0]["transAkumulasiPoint"],
               perolehanPoint: glDtHitungTotal[0]["perolehanPoint"],
-              appVersion: "1.2.0",
+              appVersion: "1.3.0",
               potBank: glDtHitungTotal[0]["potBank"],
               pembulatan: pembulatan,
               dtPromosiRaw: glDtHitungTotal[0]["dtPromosiRaw"],
@@ -538,7 +543,11 @@ function KasirPembayaran() {
           className={`${memberMerah ? "bg-red" : "bg-blue"} rounded-t-xl p-5`}
         >
           <p className="font-semibold text-center text-white text-subTitle">
-            {selectedPayment === "ISAKU" ? "I-SAKU" : selectedPayment}
+            {selectedPayment === "ISAKU"
+              ? "I-SAKU"
+              : selectedPayment === "QRISBCA"
+              ? "QRIS BCA"
+              : selectedPayment}
           </p>
         </div>
         <div
@@ -573,6 +582,8 @@ function KasirPembayaran() {
             {` ${
               selectedPayment === "ISAKU"
                 ? `Token I-SAKU Anda`
+                : selectedPayment === "QRISBCA"
+                ? `QR BCA Anda`
                 : `QR ${selectedPayment} Anda`
             }`}
           </p>
@@ -670,6 +681,8 @@ function KasirPembayaran() {
                       ? IcIsaku
                       : item.value === "SHOPEEPAY"
                       ? IcShopeepay
+                      : item.value === "QRISBCA"
+                      ? IcBca
                       : IcGopay
                   }
                   alt=""
