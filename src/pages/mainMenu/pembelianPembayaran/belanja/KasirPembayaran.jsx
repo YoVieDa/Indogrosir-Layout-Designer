@@ -34,6 +34,13 @@ import {
 } from "../../../../services/redux/documentInfoReducer";
 import Lottie from "lottie-react";
 import { toggleMemberMerah } from "../../../../services/redux/memberReducer";
+import {
+  errorLog,
+  generateTXTError,
+  sendErrorLogWithAPI,
+} from "../../../../controller/kasirPembayaranController";
+import { format } from "date-fns";
+import packageJson from "../../../../../package.json";
 
 const { ipcRenderer } = window.require("electron");
 const listPaymentMethod = [
@@ -95,6 +102,7 @@ function KasirPembayaran() {
   const glUserModul = useSelector((state) => state.glUser.userModul);
   const glStationModul = useSelector((state) => state.glUser.stationModul);
   const glLougoutApp = useSelector((state) => state.glCounter.glLogOutLimitApp);
+  const appVersion = packageJson.version;
 
   const generateDocCode = (noTransaksi) => {
     // Mengubah string menjadi angka, menambah 1, dan kemudian mengubah kembali menjadi string
@@ -306,7 +314,7 @@ function KasirPembayaran() {
               transPoint: glDtHitungTotal[0]["transPoint"],
               transAkumulasiPoint: glDtHitungTotal[0]["transAkumulasiPoint"],
               perolehanPoint: glDtHitungTotal[0]["perolehanPoint"],
-              appVersion: "1.3.0",
+              appVersion: appVersion,
               potBank: glDtHitungTotal[0]["potBank"],
               pembulatan: pembulatan,
               dtPromosiRaw: glDtHitungTotal[0]["dtPromosiRaw"],
@@ -366,9 +374,83 @@ function KasirPembayaran() {
               subFolder: `\\${response["data"]["tglCurrentForStruk"]}-${response["data"]["stationModul"]}-${response["data"]["userModul"]}`,
             };
 
-            ipcRenderer.send("save_backuppos", dtToSaveBackup);
-            ipcRenderer.send("save_receiptpos", dtToSaveReceipt);
-            ipcRenderer.send("save_receiptpos_sharing", dtToSaveReceipt);
+            console.log("mulai backup");
+            //try {
+            await ipcRenderer
+              .invoke("save_backuppos", dtToSaveBackup)
+              .then(async (result) => {})
+              .catch(async (error) => {
+                await errorLog(error.message);
+                await sendErrorLogWithAPI(
+                  error.message,
+                  glRegistryDt,
+                  URL_GATEWAY,
+                  glStationModul,
+                  appVersion
+                );
+              });
+            // } catch (error) {
+            //   await errorLog(error.message);
+            //   await sendErrorLogWithAPI(
+            //     error.message,
+            //     glRegistryDt,
+            //     URL_GATEWAY,
+            //     glStationModul,
+            //     appVersion
+            //   );
+            // }
+
+            //try {
+            await ipcRenderer
+              .invoke("save_receiptpos", dtToSaveReceipt)
+              .then(async (result) => {})
+              .catch(async (error) => {
+                await errorLog(error.message);
+                await sendErrorLogWithAPI(
+                  error.message,
+                  glRegistryDt,
+                  URL_GATEWAY,
+                  glStationModul,
+                  appVersion
+                );
+              });
+            // } catch (error) {
+            //   await errorLog(error.message);
+            //   await sendErrorLogWithAPI(
+            //     error.message,
+            //     glRegistryDt,
+            //     URL_GATEWAY,
+            //     glStationModul,
+            //     appVersion
+            //   );
+            // }
+
+            // try {
+            await ipcRenderer
+              .invoke("save_receiptpos_sharing", dtToSaveReceipt)
+              .then(async (result) => {})
+              .catch(async (error) => {
+                await errorLog(error.message);
+                await sendErrorLogWithAPI(
+                  error.message,
+                  glRegistryDt,
+                  URL_GATEWAY,
+                  glStationModul,
+                  appVersion
+                );
+              });
+            // } catch (error) {
+            //   await errorLog(error.message);
+            //   await sendErrorLogWithAPI(
+            //     error.message,
+            //     glRegistryDt,
+            //     URL_GATEWAY,
+            //     glStationModul,
+            //     appVersion
+            //   );
+            // }
+
+            console.log("selesai sharing");
 
             const dtToPrint = {
               kodeIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
@@ -384,18 +466,37 @@ function KasirPembayaran() {
                   : "eKioskPrinter",
             };
 
-            ipcRenderer.send("print_receipt_belanja", dtToPrint);
+            console.log("mulai print");
+            await ipcRenderer
+              .invoke("print_receipt_belanja", dtToPrint)
+              .then(async (result) => {
+                setInputValue("");
+                dispatch(removeAllItems());
+                await getTimeStart();
+                setMsg(
+                  "Terima kasih telah berbelanja di Indogrosir\nSilahkan tunjukkan struk ke area checker kami untuk proses verifikasi"
+                );
 
-            setLoading(false);
-            setInputValue("");
-            dispatch(removeAllItems());
-            getTimeStart();
-            setAlertSucc(true);
-            setOpenModalAlert(true);
+                setAlertSucc(true);
+                setOpenModalAlert(true);
+                setLoading(false);
 
-            setMsg(
-              "Terima kasih telah berbelanja di Indogrosir\nSilahkan tunjukkan struk ke area checker kami untuk proses verifikasi"
-            );
+                console.log("sudah print");
+              })
+              .catch(async (error) => {
+                await errorLog(error.message);
+                await sendErrorLogWithAPI(
+                  error.message,
+                  glRegistryDt,
+                  URL_GATEWAY,
+                  glStationModul,
+                  appVersion
+                );
+                setMsg("Gagal Print Struk");
+                setInputValue("");
+                setOpenModalAlert(true);
+                setLoading(false);
+              });
 
             // setTimeout(() => {
             //   setOpenModalAlert(false);
@@ -404,21 +505,37 @@ function KasirPembayaran() {
             //   navigate("/kasirSelfService");
             // }, 10000); // 10000 ms = 10 detik
           })
-          .catch(function (error) {
+          .catch(async function (error) {
             console.log(error);
             if (
               error["response"]["data"]["status"].includes("Gagal Ambil Data")
             ) {
+              await errorLog(error["response"]["data"]["errMsg"]);
+              await sendErrorLogWithAPI(
+                error["response"]["data"]["errMsg"],
+                glRegistryDt,
+                URL_GATEWAY,
+                glStationModul,
+                appVersion
+              );
               setMsg(error["response"]["data"]["status"]);
-              setLoading(false);
               setInputValue("");
               setOpenModalAlert(true);
-            } else {
-              setMsg(error["response"]["data"]["status"]);
               setLoading(false);
+            } else {
+              await errorLog(error["response"]["data"]["status"]);
+              await sendErrorLogWithAPI(
+                error["response"]["data"]["status"],
+                glRegistryDt,
+                URL_GATEWAY,
+                glStationModul,
+                appVersion
+              );
+              setMsg(error["response"]["data"]["status"]);
               setInputValue("");
               setOpenModalAlert(true);
               setAlertInfo(true);
+              setLoading(false);
             }
           });
       }

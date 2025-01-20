@@ -38,12 +38,17 @@ import { useNavigate } from "react-router-dom";
 import { removeAllItemsHitungTotal } from "../../services/redux/dtAllInputtedItemReducer";
 import SetGatewayUrl from "../../components/SetGatewayUrl";
 import { toggleMemberMerah } from "../../services/redux/memberReducer";
+import packageJson from "../../../package.json";
+import {
+  delay,
+  errorLog,
+  sendErrorLogWithAPI,
+} from "../../controller/kasirPembayaranController";
 
 const { ipcRenderer } = window.require("electron");
 
 function LoginMember() {
   const [showSetServer, setShowSetServer] = useState(false);
-
   const [showSetGatewayURL, setShowSetGatewayURL] = useState(false);
   const [f8Key, setF8Key] = useState(false);
   const [dtRegistry, setDtRegistry] = useState(null);
@@ -71,7 +76,11 @@ function LoginMember() {
   const shiftState = useSelector((state) => state.glRegistry.shiftState);
   const [isPortrait, setIsPortrait] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
+  const glDtRegistry = useSelector(
+    (state) => state.glRegistry.dtDecryptedRegistry
+  );
   const navigate = useNavigate();
+  const appVersion = packageJson.version;
 
   useEffect(() => {
     const getRegistry = () => {
@@ -533,35 +542,57 @@ function LoginMember() {
       )
       .then(async (response) => {
         if (response["data"]["status"] === 0) {
-          // const data = [
-          //   {
-          //     type: "image", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
-          //     path: `public/images/Header IGR/${glRegistryDt["glRegistryDt"]["registryOraIGR"]}.jpg`,
-          //     position: "left",
-          //     width: "250px",
-          //     height: "100px",
-          //   },
-          //   {
-          //     type: "text", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
-          //     value: response["data"]["notaClosing"],
-          //     style: {
-          //       fontFamily: "Courier, monospace", // Mengatur font ke Courier atau monospace lain
-          //       whiteSpace: "pre", // Menjaga spasi dan baris baru
-          //       fontSize: "10px",
-          //       fontWeight: "700",
-          //     },
-          //   },
-          // ];
-
+          const glDtRegistry = { glRegistryDt: registrySS };
           const dtToSaveReceipt = {
             receiptDt: response["data"]["notaClosing"],
             path: `\\${response["data"]["stationModul"]}-${response["data"]["tglClosing"]}.TXT`,
             pathSharing: `\\${response["data"]["tglClosing"]}\\${response["data"]["stationModul"]}`,
             pathFile: `\\${response["data"]["tglClosing"]}${response["data"]["userModul"]}C.TXT`,
           };
+          const folderPath = `C:\\POSSelfService\\BACKUP\\${response["data"]["tglClosing"]}-${response["data"]["stationModul"]}-${response["data"]["userModul"]}`;
+          const outputPath = `C:\\POSSelfService\\BACKUP\\${response["data"]["tglClosing"]}-${response["data"]["stationModul"]}-${response["data"]["userModul"]}.zip`;
 
-          ipcRenderer.send("save_receiptpos", dtToSaveReceipt);
-          ipcRenderer.send("save_receiptpos_sharing", dtToSaveReceipt);
+          await ipcRenderer
+            .invoke("save_receiptpos", dtToSaveReceipt)
+            .then(async (result) => {})
+            .catch(async (error) => {
+              await errorLog(error.message);
+              await sendErrorLogWithAPI(
+                error.message,
+                glDtRegistry,
+                URL_GATEWAY,
+                glStationModul,
+                appVersion
+              );
+            });
+
+          await ipcRenderer
+            .invoke("save_receiptpos_sharing", dtToSaveReceipt)
+            .then(async (result) => {})
+            .catch(async (error) => {
+              await errorLog(error.message);
+              await sendErrorLogWithAPI(
+                error.message,
+                glDtRegistry,
+                URL_GATEWAY,
+                glStationModul,
+                appVersion
+              );
+            });
+
+          await ipcRenderer
+            .invoke("backup_zip", folderPath, outputPath)
+            .then(async (result) => {})
+            .catch(async (error) => {
+              await errorLog(error.message);
+              await sendErrorLogWithAPI(
+                error.message,
+                glDtRegistry,
+                URL_GATEWAY,
+                glStationModul,
+                appVersion
+              );
+            });
 
           const dtToPrint = {
             kodeIGR: registrySS["registryOraIGR"],
@@ -573,33 +604,48 @@ function LoginMember() {
                 : "eKioskPrinter",
           };
 
-          ipcRenderer.send("print_closing", dtToPrint);
-
-          const folderPath = `C:\\POSSelfService\\BACKUP\\${response["data"]["tglClosing"]}-${response["data"]["stationModul"]}-${response["data"]["userModul"]}`;
-          const outputPath = `C:\\POSSelfService\\BACKUP\\${response["data"]["tglClosing"]}-${response["data"]["stationModul"]}-${response["data"]["userModul"]}.zip`;
-
-          ipcRenderer.send("backup_zip", folderPath, outputPath);
-
-          setOpenModalClosing(false);
-
-          dispatch(setGlDtShift(false));
-          dispatch(setFlagClosing(true));
-          setLoading(false);
-          setOpenModalAlert(true);
-          setResSuccess(true);
-          setMsg("Berhasil Melakukan Closing");
-
-          setTimeout(async () => {
-            await handleLogoutState();
-          }, 3500);
+          await ipcRenderer
+            .invoke("print_closing", dtToPrint)
+            .then(async (result) => {
+              setOpenModalClosing(false);
+              dispatch(setGlDtShift(false));
+              dispatch(setFlagClosing(true));
+              setOpenModalAlert(true);
+              setResSuccess(true);
+              setMsg("Berhasil Melakukan Closing");
+              setLoading(false);
+              //await delay(3500);
+              await handleLogoutState();
+            })
+            .catch(async (error) => {
+              await errorLog(error.message);
+              await sendErrorLogWithAPI(
+                error.message,
+                glDtRegistry,
+                URL_GATEWAY,
+                glStationModul,
+                appVersion
+              );
+              setOpenModalClosing(false);
+              setOpenModalAlert(true);
+              setMsg("Gagal Print Struk Closing");
+              setLoading(false);
+            });
         }
       })
-      .catch(function (error) {
+      .catch(async function (error) {
+        await errorLog(error["response"]?.["data"]?.["status"]);
+        await sendErrorLogWithAPI(
+          error["response"]?.["data"]?.["status"],
+          glDtRegistry,
+          URL_GATEWAY,
+          glStationModul,
+          appVersion
+        );
         setOpenModalClosing(false);
-        setLoading(false);
         setOpenModalAlert(true);
-        console.log(error);
         setMsg(error["response"]?.["data"]?.["status"]);
+        setLoading(false);
       });
   };
 
@@ -629,41 +675,73 @@ function LoginMember() {
           },
         }
       )
-      .then((response) => {
-        ipcRenderer.send("delete_registry_userstation");
-        // Listen for the event
-        ipcRenderer.on("delete_registry_userstation", (event, arg) => {
-          if (arg === "Gagal menghapus registry user station") {
-            setMsg("Gagal Menghapus Modul");
-            setOpenModalAlert(true);
-          } else {
-            // setResSuccess(true);
-            // setMsg("Berhasil Menghapus Modul");
-            // setOpenModalAlert(true);
+      .then(async (response) => {
+        await ipcRenderer
+          .invoke("delete_registry_userstation")
+          .then((result) => {
             dispatch(setGlDataUserModul(""));
             dispatch(setGlDataStationModul(""));
             dispatch(setGlDataNamaModul(""));
             setResSuccess(true);
             setMsg("Logout Berhasil");
-            navigate("/loginPSS");
             setLoading(false);
-          }
-        });
+            navigate("/loginPSS");
+          })
+          .catch(async (error) => {
+            const glDtRegistry = { glRegistryDt: registrySS };
+            await errorLog(error.message);
+            await sendErrorLogWithAPI(
+              error.message,
+              glDtRegistry,
+              URL_GATEWAY,
+              glStationModul,
+              appVersion
+            );
+            setMsg("Gagal Menghapus Modul");
+            setOpenModalAlert(true);
+            setLoading(false);
+          });
+        // // Listen for the event
+        // ipcRenderer.on("delete_registry_userstation", (event, arg) => {
+        //   if (arg === "Gagal menghapus registry user station") {
+        //   } else {
+        //     // setResSuccess(true);
+        //     // setMsg("Berhasil Menghapus Modul");
+        //     // setOpenModalAlert(true);
+        //     dispatch(setGlDataUserModul(""));
+        //     dispatch(setGlDataStationModul(""));
+        //     dispatch(setGlDataNamaModul(""));
+        //     setResSuccess(true);
+        //     setMsg("Logout Berhasil");
+        //     navigate("/loginPSS");
+        //     setLoading(false);
+        //   }
+        // });
 
-        return () => {
-          ipcRenderer.removeAllListeners();
-        };
+        // return () => {
+        //   ipcRenderer.removeAllListeners();
+        // };
       })
-      .catch(function (error) {
-        console.log(error.message);
+      .catch(async function (error) {
         if (error.message === "Network Error") {
           setMsg("Gagal Terhubung Dengan Gateway");
         } else {
           setMsg(error["response"]?.["data"]?.["status"]);
         }
-        setLoading(false);
+
+        const glDtRegistry = { glRegistryDt: registrySS };
+        await errorLog(error.message);
+        await sendErrorLogWithAPI(
+          error.message,
+          glDtRegistry,
+          URL_GATEWAY,
+          glStationModul,
+          appVersion
+        );
+
         setOpenModalAlert(true);
         setMsg("Logout Gagal\n" + error.message);
+        setLoading(false);
       });
   };
 
@@ -828,7 +906,7 @@ function LoginMember() {
           </div>
         </div>
         <p className="absolute z-10 text-white bottom-4 left-4 text-subText">
-          V 1.3.0
+          V {appVersion}
         </p>
       </div>
     </>

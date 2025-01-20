@@ -29,6 +29,11 @@ import {
   PIC_API_KEY,
 } from "../../../../config";
 import { toggleMemberMerah } from "../../../../services/redux/memberReducer";
+import {
+  errorLog,
+  sendErrorLogWithAPI,
+} from "../../../../controller/kasirPembayaranController";
+import packageJson from "../../../../../package.json";
 
 const { ipcRenderer } = window.require("electron");
 
@@ -45,6 +50,8 @@ function CekSaldoPoinIGR() {
   const ipDt = useSelector((state) => state.glDtIp.dtIp);
   const userDt = useSelector((state) => state.glUser.dtUser);
   const [isLandscape, setIsLandscape] = useState(false);
+  const glStationModul = useSelector((state) => state.glUser.stationModul);
+  const appVersion = packageJson.version;
 
   // useEffect(() => {
   //   handleToggleMember();
@@ -378,7 +385,19 @@ function CekSaldoPoinIGR() {
           path: `\\CetakPoin-${moment().format("YYYYMMDD")}.TXT`,
         };
 
-        ipcRenderer.send("save_receipt", dtToSaveReceipt);
+        await ipcRenderer
+          .invoke("save_receiptpos", dtToSaveReceipt)
+          .then(async (result) => {})
+          .catch(async (error) => {
+            await errorLog(error.message);
+            await sendErrorLogWithAPI(
+              error.message,
+              glRegistryDt,
+              URL_GATEWAY,
+              glStationModul,
+              appVersion
+            );
+          });
 
         const dtToPrint = {
           dataReceipt: JSON.stringify(data),
@@ -391,19 +410,38 @@ function CekSaldoPoinIGR() {
               : "eKioskPrinter",
         };
 
-        ipcRenderer.send("print_receipt", dtToPrint);
-
-        setLoading(false);
-        setPrintSuccess(true);
-        setAlertMsg("Berhasil Cetak Poin");
-        setOpenModalAlert(true);
+        await ipcRenderer
+          .invoke("print_receipt", dtToPrint)
+          .then(async (result) => {
+            setPrintSuccess(true);
+            setAlertMsg("Berhasil Cetak Poin");
+            setOpenModalAlert(true);
+            setLoading(false);
+          })
+          .catch(async (error) => {
+            await errorLog(error.message);
+            await sendErrorLogWithAPI(
+              error.message,
+              glRegistryDt,
+              URL_GATEWAY,
+              glStationModul,
+              appVersion
+            );
+          });
       })
-      .catch(function (error) {
-        console.log(error);
-        setLoading(false);
+      .catch(async function (error) {
+        await errorLog(error["response"]["data"]["status"]);
+        await sendErrorLogWithAPI(
+          error["response"]["data"]["status"],
+          glRegistryDt,
+          URL_GATEWAY,
+          glStationModul,
+          appVersion
+        );
         setPrintSuccess(false);
         setAlertMsg(error["response"]["data"]["status"]);
         setOpenModalAlert(true);
+        setLoading(false);
       });
   };
 

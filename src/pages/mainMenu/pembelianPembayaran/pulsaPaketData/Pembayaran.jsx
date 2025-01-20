@@ -193,7 +193,6 @@ function Pembayaran() {
       })
       .then((response) => {
         console.log(response);
-
         let tempBranch = response["data"]["tempBranch"];
 
         const data = [

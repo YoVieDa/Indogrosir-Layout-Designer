@@ -16,6 +16,11 @@ import {
   setGlDataUserModul,
 } from "../../services/redux/userReducer";
 import { useNavigate } from "react-router-dom";
+import {
+  errorLog,
+  sendErrorLogWithAPI,
+} from "../../controller/kasirPembayaranController";
+import packageJson from "../../../package.json";
 var md5 = require("md5");
 
 const { ipcRenderer } = window.require("electron");
@@ -31,6 +36,7 @@ function LoginPSS() {
     (state) => state.glRegistry.dtDecryptedRegistry
   );
   const glFlagClosing = useSelector((state) => state.glRegistry.flagClosing);
+  const glStationModul = useSelector((state) => state.glUser.stationModul);
 
   const [isPortrait, setIsPortrait] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
@@ -45,6 +51,7 @@ function LoginPSS() {
   const keyboard = useRef();
   let stateIpAdd = "";
   const navigate = useNavigate();
+  const appVersion = packageJson.version;
 
   useEffect(() => {
     const updateOrientation = () => {
@@ -180,26 +187,27 @@ function LoginPSS() {
         dispatch(setGlDataStationModul(response["data"]["stationModul"]));
         dispatch(setGlDataNamaModul(response["data"]["namaModul"]));
 
-        ipcRenderer.send("create_registry_userstation", dtModul);
-
-        ipcRenderer.on("create_registry_userstation", (event, arg) => {
-          if (arg === "Gagal membuat registry user station") {
-            setMsg("Gagal Setting Modul");
-            setOpenModalAlert(true);
-          } else {
+        ipcRenderer
+          .invoke("create_registry_userstation", dtModul)
+          .then((result) => {
             setResSuccess(true);
             setMsg("Berhasil Setting Modul");
             setOpenModalAlert(true);
-            navigate("/");
             setLoading(false);
-          }
-        });
-
-        // Clean the listener after the component is dismounted
-
-        return () => {
-          ipcRenderer.removeAllListeners();
-        };
+            navigate("/");
+          })
+          .catch(async (error) => {
+            await errorLog(error.message);
+            await sendErrorLogWithAPI(
+              error.message,
+              glRegistryDt,
+              URL_GATEWAY,
+              glStationModul,
+              appVersion
+            );
+            setMsg("Gagal Setting Modul");
+            setOpenModalAlert(true);
+          });
       })
       .catch(function (error) {
         console.log(error.message);

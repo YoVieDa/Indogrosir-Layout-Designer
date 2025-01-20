@@ -341,7 +341,7 @@ ipcMain.on("create_registry_gwurl", async (event, arg) => {
 });
 
 // Create key registry
-ipcMain.on("create_registry_userstation", async (event, arg) => {
+ipcMain.handle("create_registry_userstation", async (event, arg) => {
   // await console.log("Registry Arg: ", arg.encryptedOraIP);
   try {
     await regedit.createKey(
@@ -364,20 +364,19 @@ ipcMain.on("create_registry_userstation", async (event, arg) => {
           },
         },
     });
-    event.sender.send(
-      "create_registry_userstation",
-      "Berhasil membuat registry user station"
-    );
-  } catch {
-    event.sender.send(
-      "create_registry_userstation",
-      "Gagal membuat registry user station"
+    return {
+      success: true,
+      message: "Registry user station created successfully",
+    };
+  } catch (error) {
+    throw new Error(
+      `Gagal membuat registry user station \r\nError Message: ${error.message}\r\nError Stack: ${error.stack}`
     );
   }
 });
 
 // Delete key registry
-ipcMain.on("delete_registry_userstation", async (event, arg) => {
+ipcMain.handle("delete_registry_userstation", async (event, arg) => {
   // await console.log("Registry Arg: ", arg.encryptedOraIP);
   try {
     await regedit.createKey(
@@ -400,14 +399,14 @@ ipcMain.on("delete_registry_userstation", async (event, arg) => {
           },
         },
     });
-    event.sender.send(
-      "delete_registry_userstation",
-      "Berhasil menghapus registry user station"
-    );
-  } catch {
-    event.sender.send(
-      "delete_registry_userstation",
-      "Gagal menghapus registry user station"
+
+    return {
+      success: true,
+      message: "Registry user station deleted successfully",
+    };
+  } catch (error) {
+    throw new Error(
+      `Gagal menghapus registry user station \r\nError Message: ${error.message}\r\nError Stack: ${error.stack}`
     );
   }
 });
@@ -478,32 +477,23 @@ ipcMain.on("save_receipt", async (event, receipt) => {
 });
 
 // Save Struk file into directory in .txt
-ipcMain.on("save_receiptpos", async (event, receipt) => {
-  let saveDirectory;
+ipcMain.handle("save_receiptpos", async (event, receipt) => {
+  try {
+    let saveDirectory;
 
-  saveDirectory = `C:\\POSSelfService\\STRUK`;
+    saveDirectory = `C:\\POSSelfService\\STRUK`;
 
-  let savePath = path.join(saveDirectory, receipt.path);
+    let savePath = path.join(saveDirectory, receipt.path);
 
-  // Periksa apakah direktori sudah ada
-  if (!fs.existsSync(saveDirectory)) {
-    try {
+    // Periksa apakah direktori sudah ada
+    if (!fs.existsSync(saveDirectory)) {
       // Buat direktori jika belum ada
       fs.mkdirSync(saveDirectory, { recursive: true });
       console.log("Direktori berhasil dibuat:", saveDirectory);
-    } catch (err) {
-      // dialog.showErrorBox(
-      //   "Error",
-      //   `Failed to save receipt pos txt:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
-      // );
-      console.error("Error creating directory:", err);
-      event.reply("receiptSaveError", err.message);
-      return; // Hentikan proses jika terjadi kesalahan dalam pembuatan direktori
     }
-  }
 
-  // Simpan file ke direktori yang sudah ditentukan
-  try {
+    // Simpan file ke direktori yang sudah ditentukan
+
     if (fs.existsSync(savePath)) {
       // Tambahkan ke file yang sudah ada jika 'pos' true dan file sudah ada
       fs.appendFileSync(savePath, receipt.receiptDt);
@@ -513,88 +503,93 @@ ipcMain.on("save_receiptpos", async (event, receipt) => {
       fs.writeFileSync(savePath, receipt.receiptDt);
       console.log("File baru berhasil disimpan:", savePath);
     }
-  } catch (err) {
-    // dialog.showErrorBox(
-    //   "Error",
-    //   `Failed to save receipt pos txt:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
-    // );
-    console.error("Error saving file:", err);
-    event.reply("savingFileError", err.message);
-    return;
+
+    return { success: true, message: "File saved successfully" };
+  } catch (error) {
+    throw new Error(
+      `Gagal menyimpan struk belanja: \r\nError Message: ${error.message}\r\nError Stack: ${error.stack}`
+    );
   }
 });
 
-ipcMain.on("save_receiptpos_sharing", async (event, receipt) => {
-  let saveDirectory = `S:\\GROSIR\\STRUK\\IKIOSK`;
+// Save Struk file into directory in .txt
+ipcMain.handle("save_errorlog", async (event, errorDt) => {
+  try {
+    let saveDirectory;
 
-  // Gabungkan saveDirectory dengan folder tanggal
-  const subFolderPath = path.join(saveDirectory, receipt.pathSharing);
+    saveDirectory = `C:\\POSSelfService\\ERROR`;
 
-  // Periksa apakah direktori backup utama sudah ada
-  if (!fs.existsSync(saveDirectory)) {
-    try {
+    let savePath = path.join(saveDirectory, errorDt.path);
+
+    // Periksa apakah direktori sudah ada
+    if (!fs.existsSync(saveDirectory)) {
+      // Buat direktori jika belum ada
+      fs.mkdirSync(saveDirectory, { recursive: true });
+      console.log("Direktori berhasil dibuat:", saveDirectory);
+    }
+
+    // Simpan file ke direktori yang sudah ditentukan
+
+    if (fs.existsSync(savePath)) {
+      // Tambahkan ke file yang sudah ada jika 'pos' true dan file sudah ada
+      fs.appendFileSync(savePath, errorDt.errorMsg);
+      console.log("Data berhasil ditambahkan ke file:", savePath);
+    } else {
+      // Simpan file baru jika 'pos' false atau file belum ada
+      fs.writeFileSync(savePath, errorDt.errorMsg);
+      console.log("File baru berhasil disimpan:", savePath);
+      // Jika semua berhasil, kembalikan pesan sukses
+      return { success: true, message: "File saved successfully" };
+    }
+  } catch (error) {
+    throw new Error(
+      `Gagal menyimpan error log: \r\nError Message: ${error.message}\r\nError Stack: ${error.stack}`
+    );
+  }
+});
+
+ipcMain.handle("save_receiptpos_sharing", async (event, receipt) => {
+  try {
+    let saveDirectory = `S:\\GROSIR\\STRUK\\IKIOSK`;
+
+    // Gabungkan saveDirectory dengan folder tanggal
+    const subFolderPath = path.join(saveDirectory, receipt.pathSharing);
+
+    // Periksa apakah direktori backup utama sudah ada
+    if (!fs.existsSync(saveDirectory)) {
       // Buat direktori backup utama jika belum ada
       fs.mkdirSync(saveDirectory, { recursive: true });
       console.log("Direktori backup utama berhasil dibuat:", saveDirectory);
-      event.sender.send("save_receiptpos_sharing", "success");
-    } catch (err) {
-      // dialog.showErrorBox(
-      //   "Error",
-      //   `Failed to save receipt pos sharing txt:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
-      // );
-      console.error("Error creating main backup directory:", err);
-      let errorMessage = `Gagal menyimpan file. . Error: ${err.message}`;
-      event.sender.send("save_receiptpos_sharing", errorMessage);
-      return; // Hentikan proses jika terjadi kesalahan dalam pembuatan direktori
     }
-  }
 
-  // Periksa apakah sub folder sudah ada
-  if (!fs.existsSync(subFolderPath)) {
-    try {
+    // Periksa apakah sub folder sudah ada
+    if (!fs.existsSync(subFolderPath)) {
       // Buat folder tanggal jika belum ada
       fs.mkdirSync(subFolderPath, { recursive: true });
       console.log("Direktori tanggal berhasil dibuat:", subFolderPath);
-      event.sender.send("save_receiptpos_sharing", "success");
-    } catch (err) {
-      // dialog.showErrorBox(
-      //   "Error",
-      //   `Failed to save receipt pos sharing txt:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
-      // );
-      console.error("Error creating date folder:", err);
-      console.error("Error:", err);
-      let errorMessage = `Gagal menyimpan file. . Error: ${err.message}`;
-      event.sender.send("save_receiptpos_sharing", errorMessage);
-      return; // Hentikan proses jika terjadi kesalahan dalam pembuatan folder tanggal
     }
-  }
 
-  // Gabungkan direktori tanggal dengan nama file dari receipt.path
-  const savePath = path.join(subFolderPath, receipt.pathFile);
+    // Gabungkan direktori tanggal dengan nama file dari receipt.path
+    const savePath = path.join(subFolderPath, receipt.pathFile);
 
-  // Simpan file ke folder tanggal yang sudah ditentukan
-  // Simpan file ke direktori yang sudah ditentukan
-  try {
+    // Simpan file ke folder tanggal yang sudah ditentukan
+    // Simpan file ke direktori yang sudah ditentukan
+
     if (fs.existsSync(savePath)) {
       // Tambahkan ke file yang sudah ada jika 'pos' true dan file sudah ada
       fs.appendFile(savePath, receipt.receiptDt);
       console.log("Data berhasil ditambahkan ke file:", savePath);
-      event.sender.send("save_receiptpos_sharing", "success");
     } else {
       // Simpan file baru jika 'pos' false atau file belum ada
       fs.writeFileSync(savePath, receipt.receiptDt);
       console.log("File baru berhasil disimpan:", savePath);
-      event.sender.send("save_receiptpos_sharing", "success");
     }
-  } catch (err) {
-    console.error("Error:", err);
-    // dialog.showErrorBox(
-    //   "Error",
-    //   `Failed to save receipt pos sharing txt:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
-    // );
-    let errorMessage = `Gagal menyimpan file. Error: ${err.message}`;
-    event.sender.send("save_receiptpos_sharing", errorMessage);
-    return;
+
+    return { success: true, message: "File saved successfully" };
+  } catch (error) {
+    throw new Error(
+      `Gagal menyimpan struk belanja sharing: \r\nError Message: ${error.message}\r\nError Stack: ${error.stack}`
+    );
   }
 });
 
@@ -636,70 +631,50 @@ ipcMain.on("save_receiptpos_sharing", async (event, receipt) => {
 // });
 
 // Save backup file into directory in .txt
-ipcMain.on("save_backuppos", async (event, receipt) => {
-  console.log(receipt);
-  let saveDirectory = `C:\\POSSelfService\\BACKUP`;
+ipcMain.handle("save_backuppos", async (event, receipt) => {
+  try {
+    console.log(receipt);
+    let saveDirectory = `C:\\POSSelfService\\BACKUP`;
 
-  // Gabungkan saveDirectory dengan folder tanggal
-  const subFolderPath = path.join(saveDirectory, receipt.subFolder);
+    // Gabungkan saveDirectory dengan folder tanggal
+    const subFolderPath = path.join(saveDirectory, receipt.subFolder);
 
-  // Periksa apakah direktori backup utama sudah ada
-  if (!fs.existsSync(saveDirectory)) {
-    try {
+    // Periksa apakah direktori backup utama sudah ada
+    if (!fs.existsSync(saveDirectory)) {
       // Buat direktori backup utama jika belum ada
       fs.mkdirSync(saveDirectory, { recursive: true });
       console.log("Direktori backup utama berhasil dibuat:", saveDirectory);
-    } catch (err) {
-      console.error("Error creating main backup directory:", err);
-      // dialog.showErrorBox(
-      //   "Error",
-      //   `Failed to save backup pos:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
-      // );
-      event.reply("save_backuppos", err.message);
-      return; // Hentikan proses jika terjadi kesalahan dalam pembuatan direktori
     }
-  }
 
-  // Periksa apakah sub folder sudah ada
-  if (!fs.existsSync(subFolderPath)) {
-    try {
+    // Periksa apakah sub folder sudah ada
+    if (!fs.existsSync(subFolderPath)) {
       // Buat folder tanggal jika belum ada
       fs.mkdirSync(subFolderPath, { recursive: true });
       console.log("Direktori tanggal berhasil dibuat:", subFolderPath);
-    } catch (err) {
-      // dialog.showErrorBox(
-      //   "Error",
-      //   `Failed to save backup pos:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
-      // );
-      console.error("Error creating date folder:", err);
-      event.reply("save_backuppos", err.message);
-      return; // Hentikan proses jika terjadi kesalahan dalam pembuatan folder tanggal
     }
-  }
 
-  // Gabungkan direktori tanggal dengan nama file dari receipt.path
-  const savePath = path.join(subFolderPath, receipt.path);
+    // Gabungkan direktori tanggal dengan nama file dari receipt.path
+    const savePath = path.join(subFolderPath, receipt.path);
 
-  // Simpan file ke folder tanggal yang sudah ditentukan
-  try {
+    // Simpan file ke folder tanggal yang sudah ditentukan
+
     fs.writeFileSync(savePath, receipt.receiptDt);
     console.log("File baru berhasil disimpan:", savePath);
-  } catch (err) {
-    // dialog.showErrorBox(
-    //   "Error",
-    //   `Failed to save backup pos:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
-    // );
-    console.error("Error saving file:", err);
-    event.reply("save_backuppos", err.message);
+    return { success: true, message: "File saved successfully" };
+  } catch (error) {
+    throw new Error(
+      `Gagal menyimpan backup: \r\nError Message: ${error.message}\r\nError Stack: ${error.stack}`
+    );
   }
 });
 
 // Print Receipt
-ipcMain.on("print_receipt", (event, arg) => {
+ipcMain.handle("print_receipt", async (event, arg) => {
   const data = JSON.parse(arg.dataReceipt);
 
   const options = {
     printerName: arg.printerName,
+    timeOutPerLine: 5000,
     silent: true,
     pageSize: "80mm",
     margin: "0 0 0 2mm",
@@ -708,23 +683,20 @@ ipcMain.on("print_receipt", (event, arg) => {
   };
 
   // Printer
-  if (data) {
-    PosPrinter.print(data, options)
-      .then(console.log)
-      .catch((error) => {
-        // dialog.showErrorBox(
-        //   "Error",
-        //   `Failed to print receipt:\n\n${error.message}\n\nStack Trace:\n${error.stack}`
-        // );
-        console.log(error);
-      });
-  }
+
+  await PosPrinter.print(data, options).catch((error) => {
+    console.error("Detail Error:", error); // Log lebih jelas
+    throw new Error(`Gagal Print Struk: ${error}`);
+  });
+
+  return { success: true, message: "File printed successfully" };
 });
 
 // Print Receipt Belanja
-ipcMain.on("print_receipt_belanja", (event, arg) => {
+ipcMain.handle("print_receipt_belanja", async (event, arg) => {
   const options = {
     printerName: arg.printerName,
+    timeOutPerLine: 5000,
     silent: true,
     pageSize: "80mm",
     margin: "0 0 0 2mm",
@@ -733,21 +705,21 @@ ipcMain.on("print_receipt_belanja", (event, arg) => {
   };
 
   const data = [
-    {
-      type: "image", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
-      path: path.join(
-        __dirname,
-        "..",
-        "..",
-        "public",
-        "images",
-        "Header IGR",
-        `${arg.kodeIGR}.jpg`
-      ),
-      position: "left",
-      width: "250px",
-      height: "100px",
-    },
+    // {
+    //   type: "image", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
+    //   path: path.join(
+    //     __dirname,
+    //     "..",
+    //     "..",
+    //     "public",
+    //     "images",
+    //     "Header IGR",
+    //     `${arg.kodeIGR}.jpg`
+    //   ),
+    //   position: "left",
+    //   width: "250px",
+    //   height: "100px",
+    // },
     {
       type: "text", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
       value: arg.strukData,
@@ -795,24 +767,44 @@ ipcMain.on("print_receipt_belanja", (event, arg) => {
     },
   ];
 
-  // Printer
-  if (data) {
-    PosPrinter.print(data, options)
-      .then(console.log)
-      .catch((error) => {
-        // dialog.showErrorBox(
-        //   "Error",
-        //   `Failed to print transaction receipt:\n\n${error.message}\n\nStack Trace:\n${error.stack}`
-        // );
-        console.log(error);
-      });
+  // // Printer
+  // if (data) {
+  //   PosPrinter.print(data, options)
+  //     .then(console.log)
+  //     .catch((error) => {
+  //       // dialog.showErrorBox(
+  //       //   "Error",
+  //       //   `Failed to print transaction receipt:\n\n${error.message}\n\nStack Trace:\n${error.stack}`
+  //       // );
+  //       console.log(error);
+  //       throw new Error(`Gagal Print Struk: ${error.message}`);
+  //     });
+  // }
+  try {
+    // Tunggu proses printing selesai
+    await PosPrinter.print(data, options).catch((error) => {
+      console.error("Detail Error:", error); // Log lebih jelas
+      throw new Error(`Gagal Print Struk: ${error}`);
+      // if(error.includes("Make sure your printer is connected") && arg.printerName === true){
+      // return { success: true, message: "File printed successfully" };
+      // } else {
+      //   throw new Error(`Gagal Print Struk: ${error}`);
+      // }
+    });
+
+    return { success: true, message: "File printed successfully" };
+  } catch (error) {
+    throw new Error(
+      `Gagal Print Struk: \r\nError Message: ${error.message}\r\nError Stack: ${error.stack}`
+    );
   }
 });
 
 // Print Receipt Belanja
-ipcMain.on("print_closing", (event, arg) => {
+ipcMain.handle("print_closing", async (event, arg) => {
   const options = {
     printerName: arg.printerName,
+    timeOutPerLine: 5000,
     silent: true,
     pageSize: "80mm",
     margin: "0 0 0 2mm",
@@ -847,23 +839,27 @@ ipcMain.on("print_closing", (event, arg) => {
       },
     },
   ];
+  try {
+    await PosPrinter.print(data, options).catch((error) => {
+      console.error("Detail Error:", error); // Log lebih jelas
+      throw new Error(`Gagal Print Struk: ${error}`);
+      // if(error.includes("Make sure your printer is connected") && arg.printerName === true){
+      // return { success: true, message: "File printed successfully" };
+      // } else {
+      //   throw new Error(`Gagal Print Struk: ${error}`);
+      // }
+    });
 
-  // Printer
-  if (data) {
-    PosPrinter.print(data, options)
-      .then(console.log)
-      .catch((error) => {
-        // dialog.showErrorBox(
-        //   "Error",
-        //   `Failed to print closing receipt:\n\n${error.message}\n\nStack Trace:\n${error.stack}`
-        // );
-        console.log(error);
-      });
+    return { success: true, message: "File printed successfully" };
+  } catch (error) {
+    throw new Error(
+      `Gagal Print Struk Closing: \r\nError Message: ${error.message}\r\nError Stack: ${error.stack}`
+    );
   }
 });
 
 // Backup To Zip
-ipcMain.on("backup_zip", (event, folderPath, outputPath) => {
+ipcMain.handle("backup_zip", (event, folderPath, outputPath) => {
   try {
     // Membuat instance AdmZip
     const zip = new AdmZip();
@@ -881,12 +877,11 @@ ipcMain.on("backup_zip", (event, folderPath, outputPath) => {
     // Menghapus folder setelah berhasil dikompres
     fs.rmSync(folderPath, { recursive: true, force: true });
     console.log(`Folder ${folderPath} telah dihapus.`);
-  } catch (err) {
-    // dialog.showErrorBox(
-    //   "Error",
-    //   `Failed to zip backup:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
-    // );
-    console.error("Gagal mengompres folder:", err);
+    return { success: true, message: "File zip successfully" };
+  } catch (error) {
+    throw new Error(
+      `Gagal Zip Backup: \r\nError Message: ${error.message}\r\nError Stack: ${error.stack}`
+    );
   }
 });
 
