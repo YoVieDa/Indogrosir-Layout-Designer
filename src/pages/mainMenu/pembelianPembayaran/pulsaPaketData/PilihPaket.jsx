@@ -9,8 +9,9 @@ import {
 } from "../../../../assets";
 import Loader from "../../../../components/Loader";
 import StandardBtn from "../../../../components/StandardBtn";
-import { PAYMENT_KEY, URL_GATEWAY } from "../../../../config";
+import { AESEncrypt, PAYMENT_KEY, URL_GATEWAY } from "../../../../config";
 import { toggleMemberMerah } from "../../../../services/redux/memberReducer";
+import { deleteTempMemberFromAPI } from "../../../../controller/kasirPembayaranController";
 
 const dataDummy = [
   {
@@ -76,6 +77,8 @@ function PilihPaket() {
 
   const navigate = useNavigate();
   const glLougoutApp = useSelector((state) => state.glCounter.glLogOutLimitApp);
+  const glIpModul = useSelector((state) => state.glDtIp.dtIp);
+  const glStationModul = useSelector((state) => state.glUser.stationModul);
   const dispatch = useDispatch();
   const [isLandscape, setIsLandscape] = useState(false);
 
@@ -94,12 +97,38 @@ function PilihPaket() {
     navigate("/pembayaran", { state: { type, providerName, plu, noHp } });
   };
 
-  const handleNavigate = () => {
-    if (memberMerah) {
-      navigate("/");
+  const handleNavigate = async () => {
+    setLoading(true);
+
+    const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
+      URL_GATEWAY,
+      userDt["memberID"],
+      glIpModul,
+      glStationModul,
+      glRegistryDt
+    );
+
+    if (doDeleteTempMemberFromAPI.status === true) {
+      if (memberMerah) {
+        setLoading(false);
+        navigate("/");
+      } else {
+        setLoading(false);
+        navigate("/");
+        dispatch(toggleMemberMerah());
+      }
     } else {
-      navigate("/");
-      dispatch(toggleMemberMerah());
+      // if (
+      //   doDeleteTempMemberFromAPI.message ===
+      //   "Network doDeleteTempMemberFromAPI"
+      // ) {
+      //   setAlertMsg("Gagal Terhubung Dengan Gateway");
+      // } else {
+      //   setAlertMsg(doDeleteTempMemberFromAPI.message);
+      // }
+
+      setLoading(false);
+      // setOpenModalAlert(true);
     }
   };
 
@@ -117,7 +146,7 @@ function PilihPaket() {
 
     const setNewTimeout = () => {
       newTimeoutId = setTimeout(async () => {
-        handleNavigate();
+        await handleNavigate();
       }, glLougoutApp["lcLogOutLimitApp"] * 1000);
     };
 

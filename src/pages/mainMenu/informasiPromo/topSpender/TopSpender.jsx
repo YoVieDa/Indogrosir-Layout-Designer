@@ -14,8 +14,9 @@ import Loader from "../../../../components/Loader";
 import DataEmpty from "../../../../components/DataEmpty";
 import { useNavigate } from "react-router-dom";
 import { setGlDtTopSpender } from "../../../../services/redux/topSpenderReducer";
-import { INFO_PROMO_KEY, URL_GATEWAY } from "../../../../config";
+import { AESEncrypt, INFO_PROMO_KEY, URL_GATEWAY } from "../../../../config";
 import { toggleMemberMerah } from "../../../../services/redux/memberReducer";
+import { deleteTempMemberFromAPI } from "../../../../controller/kasirPembayaranController";
 
 const dataDummy = [
   {
@@ -52,12 +53,40 @@ function TopSpender() {
   const navigate = useNavigate();
   const [isLandscape, setIsLandscape] = useState(false);
   const glLougoutApp = useSelector((state) => state.glCounter.glLogOutLimitApp);
-  const handleNavigate = () => {
-    if (memberMerah) {
-      navigate("/");
+  const glIpModul = useSelector((state) => state.glDtIp.dtIp);
+  const glStationModul = useSelector((state) => state.glUser.stationModul);
+  const handleNavigate = async () => {
+    setLoading(true);
+
+    const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
+      URL_GATEWAY,
+      userDt["memberID"],
+      glIpModul,
+      glStationModul,
+      glRegistryDt
+    );
+
+    if (doDeleteTempMemberFromAPI.status === true) {
+      if (memberMerah) {
+        setLoading(false);
+        navigate("/");
+      } else {
+        setLoading(false);
+        navigate("/");
+        dispatch(toggleMemberMerah());
+      }
     } else {
-      navigate("/");
-      dispatch(toggleMemberMerah());
+      // if (
+      //   doDeleteTempMemberFromAPI.message ===
+      //   "Network doDeleteTempMemberFromAPI"
+      // ) {
+      //   setAlertMsg("Gagal Terhubung Dengan Gateway");
+      // } else {
+      //   setAlertMsg(doDeleteTempMemberFromAPI.message);
+      // }
+
+      setLoading(false);
+      // setOpenModalAlert(true);
     }
   };
 
@@ -75,7 +104,7 @@ function TopSpender() {
 
     const setNewTimeout = () => {
       newTimeoutId = setTimeout(async () => {
-        handleNavigate();
+        await handleNavigate();
       }, glLougoutApp["lcLogOutLimitApp"] * 1000);
     };
 

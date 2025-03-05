@@ -705,21 +705,21 @@ ipcMain.handle("print_receipt_belanja", async (event, arg) => {
   };
 
   const data = [
-    // {
-    //   type: "image", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
-    //   path: path.join(
-    //     __dirname,
-    //     "..",
-    //     "..",
-    //     "public",
-    //     "images",
-    //     "Header IGR",
-    //     `${arg.kodeIGR}.jpg`
-    //   ),
-    //   position: "left",
-    //   width: "250px",
-    //   height: "100px",
-    // },
+    {
+      type: "image", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
+      path: path.join(
+        __dirname,
+        "..",
+        "..",
+        "public",
+        "images",
+        "Header IGR",
+        `${arg.kodeIGR}.jpg`
+      ),
+      position: "left",
+      width: "250px",
+      height: "100px",
+    },
     {
       type: "text", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
       value: arg.strukData,
@@ -861,6 +861,15 @@ ipcMain.handle("print_closing", async (event, arg) => {
 // Backup To Zip
 ipcMain.handle("backup_zip", (event, folderPath, outputPath) => {
   try {
+    // Cek apakah folderPath ada
+    if (!fs.existsSync(folderPath)) {
+      return {
+        success: true,
+        message:
+          "Folder tidak ditemukan, dianggap sukses karena tidak ada transaksi yang perlu di zip.",
+      };
+    }
+
     // Membuat instance AdmZip
     const zip = new AdmZip();
 

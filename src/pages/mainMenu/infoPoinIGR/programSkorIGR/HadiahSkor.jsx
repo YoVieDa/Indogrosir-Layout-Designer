@@ -16,9 +16,10 @@ import axios from "axios";
 import Loader from "../../../../components/Loader";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { POIN_KEY, URL_GATEWAY } from "../../../../config";
+import { AESEncrypt, POIN_KEY, URL_GATEWAY } from "../../../../config";
 import { useNavigate } from "react-router-dom";
 import { toggleMemberMerah } from "../../../../services/redux/memberReducer";
+import { deleteTempMemberFromAPI } from "../../../../controller/kasirPembayaranController";
 
 const dataDummy = [
   {
@@ -48,14 +49,42 @@ function ProgramSkorIGR() {
   const dtGlInfoSkor = useSelector((state) => state.glInfoSkor.dtInfoSkor);
   const [isLandscape, setIsLandscape] = useState(false);
   const glLougoutApp = useSelector((state) => state.glCounter.glLogOutLimitApp);
+  const glIpModul = useSelector((state) => state.glDtIp.dtIp);
+  const glStationModul = useSelector((state) => state.glUser.stationModul);
   const navigate = useNavigate();
 
-  const handleNavigate = () => {
-    if (memberMerah) {
-      navigate("/");
+  const handleNavigate = async () => {
+    setLoading(true);
+
+    const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
+      URL_GATEWAY,
+      userDt["memberID"],
+      glIpModul,
+      glStationModul,
+      glRegistryDt
+    );
+
+    if (doDeleteTempMemberFromAPI.status === true) {
+      if (memberMerah) {
+        setLoading(false);
+        navigate("/");
+      } else {
+        setLoading(false);
+        navigate("/");
+        dispatch(toggleMemberMerah());
+      }
     } else {
-      navigate("/");
-      dispatch(toggleMemberMerah());
+      // if (
+      //   doDeleteTempMemberFromAPI.message ===
+      //   "Network doDeleteTempMemberFromAPI"
+      // ) {
+      //   setAlertMsg("Gagal Terhubung Dengan Gateway");
+      // } else {
+      //   setAlertMsg(doDeleteTempMemberFromAPI.message);
+      // }
+
+      setLoading(false);
+      // setOpenModalAlert(true);
     }
   };
 
@@ -73,7 +102,7 @@ function ProgramSkorIGR() {
 
     const setNewTimeout = () => {
       newTimeoutId = setTimeout(async () => {
-        handleNavigate();
+        await handleNavigate();
       }, glLougoutApp["lcLogOutLimitApp"] * 1000);
     };
 

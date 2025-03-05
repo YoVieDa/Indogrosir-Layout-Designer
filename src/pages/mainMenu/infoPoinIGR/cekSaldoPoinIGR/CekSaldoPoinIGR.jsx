@@ -27,9 +27,12 @@ import {
   POIN_KEY,
   URL_SERVICE_PIC,
   PIC_API_KEY,
+  AESEncrypt,
+  LOGIN_KEY,
 } from "../../../../config";
 import { toggleMemberMerah } from "../../../../services/redux/memberReducer";
 import {
+  deleteTempMemberFromAPI,
   errorLog,
   sendErrorLogWithAPI,
 } from "../../../../controller/kasirPembayaranController";
@@ -77,13 +80,40 @@ function CekSaldoPoinIGR() {
       .format(number)
       .replace(/\./g, ",");
   };
+  const glIpModul = useSelector((state) => state.glDtIp.dtIp);
 
-  const handleNavigateLogout = () => {
-    if (memberMerah) {
-      navigate("/");
+  const handleNavigateLogout = async () => {
+    setLoading(true);
+
+    const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
+      URL_GATEWAY,
+      userDt["memberID"],
+      glIpModul,
+      glStationModul,
+      glRegistryDt
+    );
+
+    if (doDeleteTempMemberFromAPI.status === true) {
+      if (memberMerah) {
+        setLoading(false);
+        navigate("/");
+      } else {
+        setLoading(false);
+        navigate("/");
+        dispatch(toggleMemberMerah());
+      }
     } else {
-      navigate("/");
-      dispatch(toggleMemberMerah());
+      if (
+        doDeleteTempMemberFromAPI.message ===
+        "Network doDeleteTempMemberFromAPI"
+      ) {
+        setAlertMsg("Gagal Terhubung Dengan Gateway");
+      } else {
+        setAlertMsg(doDeleteTempMemberFromAPI.message);
+      }
+
+      setLoading(false);
+      setOpenModalAlert(true);
     }
   };
 
@@ -101,7 +131,7 @@ function CekSaldoPoinIGR() {
 
     const setNewTimeout = () => {
       newTimeoutId = setTimeout(async () => {
-        handleNavigateLogout();
+        await handleNavigateLogout();
       }, glLougoutApp["lcLogOutLimitApp"] * 1000);
     };
 

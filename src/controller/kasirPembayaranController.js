@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { PAYMENT_KEY } from "../config";
+import { AESEncrypt, LOGIN_KEY, PAYMENT_KEY } from "../config";
 import axios from "axios";
 const { ipcRenderer } = window.require("electron");
 
@@ -68,6 +68,58 @@ export const sendErrorLogWithAPI = async (
       await errorLog("Error send error log with api\r\n" + error.message);
       return;
     }
+  }
+};
+
+export const deleteTempMemberFromAPI = async (
+  urlGW,
+  kodeMember,
+  ipModul,
+  stationModul,
+  glRegistryDt
+) => {
+  try {
+    return axios
+      .post(
+        `${urlGW}/login/logoutUser`,
+        {
+          kodeMember: kodeMember,
+          dtIpModul: ipModul,
+          dtStationModul: stationModul,
+        },
+        {
+          headers: {
+            server: glRegistryDt["glRegistryDt"]["server"],
+            registryOraIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
+            registryIp: glRegistryDt["glRegistryDt"]["registryOraIP"],
+            registryPort: glRegistryDt["glRegistryDt"]["registryPort"],
+            registryServiceName:
+              glRegistryDt["glRegistryDt"]["registryServiceName"],
+            registryUser: glRegistryDt["glRegistryDt"]["registryUser"],
+            registryPwd: glRegistryDt["glRegistryDt"]["registryPwd"],
+            "Cache-Control": "no-cache",
+            "x-api-key": LOGIN_KEY,
+          },
+        }
+      )
+      .then(async (response) => {
+        return { status: true, message: "Berhasil delete temp member" };
+      })
+      .catch((error) => {
+        if (error.message === "Network doDeleteTempMemberFromAPI") {
+          return { status: false, message: error.message };
+        } else {
+          return {
+            status: false,
+            message: error["response"]?.["data"]?.["status"],
+          };
+        }
+      });
+  } catch (error) {
+    return {
+      status: false,
+      message: error.message,
+    };
   }
 };
 

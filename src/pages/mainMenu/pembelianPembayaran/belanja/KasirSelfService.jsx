@@ -35,6 +35,7 @@ import {
 function KasirSelfService() {
   const dispatch = useDispatch();
   const memberMerah = useSelector((state) => state.memberState.memberMerah);
+  const flagMemberUmum = useSelector((state) => state.memberState.memberUmum);
   const URL_GATEWAY = useSelector((state) => state.glRegistry.dtGatewayURL);
   const navigate = useNavigate();
   const dtAllItem = useSelector(
@@ -630,12 +631,22 @@ function KasirSelfService() {
             isLandscape ? "w-[50%]" : "w-[100%]"
           }`}
         >
-          <StandardBtn
-            title="Kembali"
-            path="/pembelianPembayaranMenu"
-            width="50%"
-            pos={true}
-          />
+          {flagMemberUmum === true ? (
+            <StandardBtn
+              title="Kembali"
+              path="/pembelianPembayaranMenu"
+              width="50%"
+              pos={true}
+              memberUmum={flagMemberUmum}
+            />
+          ) : (
+            <StandardBtn
+              title="Kembali"
+              path="/pembelianPembayaranMenu"
+              width="50%"
+              pos={true}
+            />
+          )}
 
           {/* <StandardBtn
             title="Cek Promo MKT"
