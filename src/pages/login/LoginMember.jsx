@@ -243,7 +243,6 @@ function LoginMember() {
   }, [dtRegistry]);
 
   useEffect(() => {
-    setLoading(true);
     const setData = async () => {
       console.log("Mulai");
       await setUpLogoutCounter(registrySS);
@@ -255,6 +254,7 @@ function LoginMember() {
     };
     if (registrySS !== undefined && registrySS !== null) {
       if (registrySS["registryOraIGR"] !== "") {
+        setLoading(true);
         console.log("glRegistryDtfffff", registrySS["registryOraIGR"]);
         setData();
         setLoading(false);
