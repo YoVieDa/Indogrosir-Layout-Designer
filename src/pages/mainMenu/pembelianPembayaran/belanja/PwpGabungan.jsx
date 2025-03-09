@@ -235,6 +235,7 @@ function PwpGabungan() {
             dtTablePLUPWPUpdate: dtTablePLUPWPUpdate,
             userModul: glUserModul,
             stationModul: glStationModul,
+            selectedPayment: "",
           },
           {
             headers: {

@@ -99,6 +99,11 @@ function KasirPembayaran() {
   const [getPointGift, setGetPointGift] = useState(false);
   const [getPointMsg, setGetPointMsg] = useState("");
   const [getGiftMsg, setGetGiftMsg] = useState("");
+  const [hitungPromoPembayaranStatus, setHitungPromoPembayaranStatus] =
+    useState(false);
+
+  const [dtHitungPromoPembayaran, setDtHitungPromoPembayaran] = useState({});
+
   const glUserModul = useSelector((state) => state.glUser.userModul);
   const glStationModul = useSelector((state) => state.glUser.stationModul);
   const glLougoutApp = useSelector((state) => state.glCounter.glLogOutLimitApp);
@@ -205,6 +210,14 @@ function KasirPembayaran() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (JSON.stringify(dtHitungPromoPembayaran) !== "{}") {
+      setOpenModalPayment(true);
+    } else {
+      setOpenModalPayment(false);
+    }
+  }, [dtHitungPromoPembayaran]);
+
   // useEffect(() => {
   //   countTotal();
   //   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -270,14 +283,28 @@ function KasirPembayaran() {
   const handleEnterPress = async (e) => {
     if (e.key === "Enter") {
       setLoading(true);
-      if (openModalPayment === false) {
+      if (hitungPromoPembayaranStatus === true) {
+        setInputValue("");
+        setSelectedPayment(selectedPayment);
+      } else if (openModalPayment === false) {
         setInputValue("");
         setSelectedPayment("");
         setLoading(false);
+      } else if (selectedPayment === "ISAKU" && inputValue.length > 15) {
+        setMsg(
+          "Pembayaran i.Saku belum berhasil\nToken i.saku yang anda masukkan tidak valid"
+        );
+        setInputValue("");
+        setDtHitungPromoPembayaran({});
+        setOpenModalAlert(true);
+        setAlertInfo(true);
+        setLoading(false);
+        setOpenModalPayment(false);
       } else {
         setOpenModalPayment(false);
         let totalJualHDR =
-          glDtHitungTotal[0]["totalNilai"] - glDtHitungTotal[0]["totDisc"];
+          dtHitungPromoPembayaran["totalNilai"] -
+          dtHitungPromoPembayaran["totDisc"];
 
         await axios
           .post(
@@ -299,29 +326,33 @@ function KasirPembayaran() {
               },
               noTransaksi: glDtDocInfo,
               timeStart: glDtTimeStart,
-              timeEnd: glDtHitungTotal[0]["retTimeEnd"],
-              total: Math.round(Number(glDtHitungTotal[0]["jumlahPenjualan"])),
+              timeEnd: dtHitungPromoPembayaran["retTimeEnd"],
+              total: Math.round(
+                Number(dtHitungPromoPembayaran["jumlahPenjualan"])
+              ),
               totalJualHDR: Math.round(Number(totalJualHDR)),
               dtDtlBrng: glDtHitungTotal[0]["dtDtlBrngUpdate"],
-              dtCashback: glDtHitungTotal[0]["dtCashback"],
-              dtGift: glDtHitungTotal[0]["dtGift"],
+              dtCashback: dtHitungPromoPembayaran["dtCashback"],
+              dtGift: dtHitungPromoPembayaran["dtGift"],
               dtInputtedItem: dtAllItem,
-              totDiscount: Math.round(Number(glDtHitungTotal[0]["totDisc"])),
+              totDiscount: Math.round(
+                Number(dtHitungPromoPembayaran["totDisc"])
+              ),
               totCashback: Math.round(
-                Number(glDtHitungTotal[0]["totCashback"])
+                Number(dtHitungPromoPembayaran["totCashback"])
               ),
               totDiscountPercent: 0,
               transPoint: glDtHitungTotal[0]["transPoint"],
               transAkumulasiPoint: glDtHitungTotal[0]["transAkumulasiPoint"],
               perolehanPoint: glDtHitungTotal[0]["perolehanPoint"],
               appVersion: appVersion,
-              potBank: glDtHitungTotal[0]["potBank"],
+              potBank: dtHitungPromoPembayaran["potBank"],
               pembulatan: pembulatan,
-              dtPromosiRaw: glDtHitungTotal[0]["dtPromosiRaw"],
-              dtPromosiDtlRaw: glDtHitungTotal[0]["dtPromosiDtlRaw"],
+              dtPromosiRaw: dtHitungPromoPembayaran["dtPromosiRaw"],
+              dtPromosiDtlRaw: dtHitungPromoPembayaran["dtPromosiDtlRaw"],
               verificationCode: inputValue.split("#").join(""),
               selectedPayment: selectedPayment,
-              flagFasilitasBank: glDtHitungTotal[0]["flagFasilitasBank"],
+              flagFasilitasBank: dtHitungPromoPembayaran["flagFasilitasBank"],
               userModul: glUserModul,
               stationModul: glStationModul,
             },
@@ -342,8 +373,6 @@ function KasirPembayaran() {
           )
           .then(async (response) => {
             console.log(response["data"]);
-            // console.log(response["data"]["strukData"]);
-
             if (response["data"]["pointTxt"] !== "") {
               setGetPointGift(true);
               setGetPointMsg(response["data"]["pointTxt"]);
@@ -353,10 +382,6 @@ function KasirPembayaran() {
               setGetPointGift(true);
               setGetGiftMsg(response["data"]["giftTxt"]);
             }
-
-            // let headerPic = await getPic(
-            //   "IGR" + glRegistryDt["glRegistryDt"]["registryOraIGR"]
-            // );
 
             const dtToSaveReceipt = {
               receiptDt:
@@ -375,7 +400,7 @@ function KasirPembayaran() {
             };
 
             console.log("mulai backup");
-            //try {
+
             await ipcRenderer
               .invoke("save_backuppos", dtToSaveBackup)
               .then(async (result) => {})
@@ -389,18 +414,7 @@ function KasirPembayaran() {
                   appVersion
                 );
               });
-            // } catch (error) {
-            //   await errorLog(error.message);
-            //   await sendErrorLogWithAPI(
-            //     error.message,
-            //     glRegistryDt,
-            //     URL_GATEWAY,
-            //     glStationModul,
-            //     appVersion
-            //   );
-            // }
 
-            //try {
             await ipcRenderer
               .invoke("save_receiptpos", dtToSaveReceipt)
               .then(async (result) => {})
@@ -414,18 +428,7 @@ function KasirPembayaran() {
                   appVersion
                 );
               });
-            // } catch (error) {
-            //   await errorLog(error.message);
-            //   await sendErrorLogWithAPI(
-            //     error.message,
-            //     glRegistryDt,
-            //     URL_GATEWAY,
-            //     glStationModul,
-            //     appVersion
-            //   );
-            // }
 
-            // try {
             await ipcRenderer
               .invoke("save_receiptpos_sharing", dtToSaveReceipt)
               .then(async (result) => {})
@@ -439,16 +442,6 @@ function KasirPembayaran() {
                   appVersion
                 );
               });
-            // } catch (error) {
-            //   await errorLog(error.message);
-            //   await sendErrorLogWithAPI(
-            //     error.message,
-            //     glRegistryDt,
-            //     URL_GATEWAY,
-            //     glStationModul,
-            //     appVersion
-            //   );
-            // }
 
             console.log("selesai sharing");
 
@@ -497,13 +490,6 @@ function KasirPembayaran() {
                 setOpenModalAlert(true);
                 setLoading(false);
               });
-
-            // setTimeout(() => {
-            //   setOpenModalAlert(false);
-            //   setInputValue("");
-            //   setAlertSucc(false);
-            //   navigate("/kasirSelfService");
-            // }, 10000); // 10000 ms = 10 detik
           })
           .catch(async function (error) {
             console.log(error);
@@ -544,7 +530,60 @@ function KasirPembayaran() {
 
   const handleSelectedPayment = async (selectedPaymentParam) => {
     setSelectedPayment(selectedPaymentParam);
-    setOpenModalPayment(true);
+
+    setHitungPromoPembayaranStatus(true);
+    setLoading(true);
+
+    await axios
+      .post(
+        `${URL_GATEWAY}/servicePayment/hitungPromoPembayaran`,
+        {
+          kodeIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
+          dbStatus: glRegistryDt["glRegistryDt"]["server"],
+          dtMember: {
+            memberID: userDt["memberID"],
+            memberFlag: userDt["memberFlag"],
+            cus_idsegment: userDt["cus_idsegment"],
+            cus_jenismember: userDt["cus_jenismember"],
+          },
+          totalNilai: glDtHitungTotal[0]["totalNilai"],
+          userModul: glUserModul,
+          stationModul: glStationModul,
+          dtCashback: glDtHitungTotal[0]["dtCashback"],
+          dtGift: glDtHitungTotal[0]["dtGift"],
+          totDisc: glDtHitungTotal[0]["totDisc"],
+          timeStart: glDtTimeStart,
+          dtDtlBrngUpdate: glDtHitungTotal[0]["dtDtlBrngUpdate"],
+          selectedPayment: selectedPaymentParam,
+        },
+        {
+          headers: {
+            server: glRegistryDt["glRegistryDt"]["server"],
+            registryOraIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
+            registryIp: glRegistryDt["glRegistryDt"]["registryOraIP"],
+            registryPort: glRegistryDt["glRegistryDt"]["registryPort"],
+            registryServiceName:
+              glRegistryDt["glRegistryDt"]["registryServiceName"],
+            registryUser: glRegistryDt["glRegistryDt"]["registryUser"],
+            registryPwd: glRegistryDt["glRegistryDt"]["registryPwd"],
+            "Cache-Control": "no-cache",
+            "x-api-key": PAYMENT_KEY,
+          },
+        }
+      )
+      .then((response) => {
+        setDtHitungPromoPembayaran(response["data"]);
+        setHitungPromoPembayaranStatus(false);
+        setLoading(false);
+      })
+      .catch(function (error) {
+        console.log(error);
+
+        setMsg(error["response"]["data"]["status"]);
+        setLoading(false);
+        setOpenModalAlert(true);
+        setOpenModalPayment(false);
+      });
   };
 
   const handleInputChange = (event) => {
@@ -581,6 +620,7 @@ function KasirPembayaran() {
         onClose={() => {
           setOpenModalAlert(false);
           setInputValue("");
+          setDtHitungPromoPembayaran({});
           setAlertSucc(false);
           setGetPointGift(false);
           setAlertInfo(false);
@@ -653,6 +693,7 @@ function KasirPembayaran() {
         onClose={() => {
           setOpenModalPayment(false);
           setSelectedPayment("");
+          setDtHitungPromoPembayaran({});
         }}
         landscape={isLandscape}
       >
@@ -679,7 +720,9 @@ function KasirPembayaran() {
           >
             <label className="font-bold text-text">Nominal</label>
             <input
-              value={formattedNumber(glDtHitungTotal[0]["jumlahPenjualan"])}
+              value={formattedNumber(
+                dtHitungPromoPembayaran?.["jumlahPenjualan"]
+              )}
               type="text"
               disabled
               className={`border bg-stroke p-5 rounded-xl ${

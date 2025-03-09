@@ -386,7 +386,7 @@ function CekSaldoPoinIGR() {
         };
 
         await ipcRenderer
-          .invoke("save_receiptpos", dtToSaveReceipt)
+          .invoke("save_receipt", dtToSaveReceipt)
           .then(async (result) => {})
           .catch(async (error) => {
             await errorLog(error.message);

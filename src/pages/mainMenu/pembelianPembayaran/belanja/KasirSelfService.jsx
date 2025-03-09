@@ -140,7 +140,6 @@ function KasirSelfService() {
     window.addEventListener("resize", updateOrientation);
 
     countTotal();
-    console.log("counttoal");
     if (glDtTimeStart === "") {
       getTimeStart();
     }
@@ -323,6 +322,7 @@ function KasirSelfService() {
             dtDtlBrng: dtAllItem,
             userModul: glUserModul,
             stationModul: glStationModul,
+            selectedPayment: "",
           },
           {
             headers: {
