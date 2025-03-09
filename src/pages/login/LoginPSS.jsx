@@ -8,7 +8,7 @@ import Loader from "../../components/Loader";
 import ModalAlert from "../../components/ModalAlert";
 import { setGlDtOritentation } from "../../services/redux/orientationReducer";
 import "./loginMember.css";
-import { LOGIN_KEY, URL_GATEWAY } from "../../config";
+import { AESEncrypt, LOGIN_KEY, URL_GATEWAY } from "../../config";
 import { setGlDtIp } from "../../services/redux/ipReducer";
 import {
   setGlDataNamaModul,
@@ -90,6 +90,7 @@ function LoginPSS() {
       // Listen for the event
       ipcRenderer.once("get_ip_address", (event, arg) => {
         stateIpAdd = arg;
+        stateIpAdd = AESEncrypt(stateIpAdd);
         console.log("stateIpAdd di get", stateIpAdd);
         dispatch(setGlDtIp(stateIpAdd));
         resolve();

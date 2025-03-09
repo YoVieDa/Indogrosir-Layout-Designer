@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   IcArrowBot,
@@ -26,7 +26,13 @@ import {
 import { setGlDtOritentation } from "../../services/redux/orientationReducer";
 import { addDtInfo } from "../../services/redux/documentInfoReducer";
 import "./loginMember.css";
-import { LOGIN_KEY, passToChar, PAYMENT_KEY, URL_GATEWAY } from "../../config";
+import {
+  AESEncrypt,
+  LOGIN_KEY,
+  passToChar,
+  PAYMENT_KEY,
+  URL_GATEWAY,
+} from "../../config";
 import {
   setGlDataNamaModul,
   setGlDataStationModul,
@@ -37,13 +43,18 @@ import Modal from "../../components/Modal";
 import { useNavigate } from "react-router-dom";
 import { removeAllItemsHitungTotal } from "../../services/redux/dtAllInputtedItemReducer";
 import SetGatewayUrl from "../../components/SetGatewayUrl";
-import { toggleMemberMerah } from "../../services/redux/memberReducer";
+import {
+  toggleMemberMerah,
+  setFlagMemberUmum,
+} from "../../services/redux/memberReducer";
 import packageJson from "../../../package.json";
 import {
   delay,
   errorLog,
   sendErrorLogWithAPI,
 } from "../../controller/kasirPembayaranController";
+import { setGlDtIp } from "../../services/redux/ipReducer";
+import { CiLogin } from "react-icons/ci";
 
 const { ipcRenderer } = window.require("electron");
 
@@ -82,6 +93,8 @@ function LoginMember() {
   const navigate = useNavigate();
   const appVersion = packageJson.version;
 
+  let ipModulRef = useRef("");
+
   useEffect(() => {
     const getRegistry = () => {
       ipcRenderer.send("get_data_registry");
@@ -99,6 +112,7 @@ function LoginMember() {
 
     dispatch(setGlDataUser(null));
     dispatch(removeAllItemsHitungTotal());
+    dispatch(setFlagMemberUmum(false));
     getRegistry();
 
     console.log("1.");
@@ -230,13 +244,21 @@ function LoginMember() {
   }, [dtRegistry]);
 
   useEffect(() => {
+    const setData = async () => {
+      console.log("Mulai");
+      await setUpLogoutCounter(registrySS);
+      await getCounterRotationSS(registrySS);
+      console.log("Tengah");
+      await setUpSSCounter(registrySS);
+      await openShift(registrySS);
+      console.log("Selesai");
+    };
     if (registrySS !== undefined && registrySS !== null) {
       if (registrySS["registryOraIGR"] !== "") {
+        setLoading(true);
         console.log("glRegistryDtfffff", registrySS["registryOraIGR"]);
-        setUpLogoutCounter(registrySS);
-        getCounterRotationSS(registrySS);
-        setUpSSCounter(registrySS);
-        openShift(registrySS);
+        setData();
+        setLoading(false);
       }
     }
 
@@ -453,28 +475,6 @@ function LoginMember() {
               },
             }
           );
-
-          // for (
-          //   let i = 0;
-          //   i < response["data"]["screenSaverPicture"][0].length;
-          //   i++
-          // ) {
-          //   dtPic.push(
-          //     response["data"]["screenSaverPicture"][0][i]["SSE_PICTURE"]
-          //   );
-          // }
-          // let base64Image = [];
-
-          // for (let i = 0; i < dtPic.length; i++) {
-          //   // eslint-disable-next-line react-hooks/exhaustive-deps
-          //   base64Image.push(
-          //     `data:image/jpeg;base64,${Buffer.from(dtPic[i]).toString(
-          //       "base64"
-          //     )}`
-          //   );
-          // }
-
-          // setBase64ImageArr(base64Image);
           setPictureArr(response["data"]["picArr"]);
           console.log("setOpenSS");
           setOpenSS(true);
@@ -614,7 +614,6 @@ function LoginMember() {
               setOpenModalAlert(true);
               setResSuccess(true);
               setMsg("Berhasil Melakukan Closing");
-              setLoading(false);
               //await delay(3500);
               await handleLogoutState();
             })
@@ -741,7 +740,7 @@ function LoginMember() {
         );
 
         setOpenModalAlert(true);
-        setMsg("Logout Gagal\n" + error.message);
+        setMsg(`Logout Gagal\n` + error.message);
         setLoading(false);
       });
   };
@@ -750,6 +749,93 @@ function LoginMember() {
     setShowSetServer(true);
   };
 
+  const getIpAddress = async () => {
+    let stateIpAdd = "";
+    return new Promise((resolve, reject) => {
+      ipcRenderer.send("get_ip_address");
+
+      // Listen for the event
+      ipcRenderer.once("get_ip_address", (event, arg) => {
+        stateIpAdd = arg;
+        stateIpAdd = AESEncrypt(stateIpAdd);
+        console.log("stateIpAdd di get", stateIpAdd);
+        dispatch(setGlDtIp(stateIpAdd));
+        ipModulRef.current = stateIpAdd;
+        resolve();
+      });
+
+      // Handle error if needed
+      ipcRenderer.once("get_ip_address", (event, error) => {
+        reject(error);
+      });
+    });
+  };
+
+  const handleToggleMember = () => {
+    dispatch(toggleMemberMerah());
+  };
+
+  const handleButtonMemberUmum = async () => {
+    setLoading(true);
+    await getIpAddress();
+
+    await axios
+      .post(
+        `${URL_GATEWAY}/login/loginFreePass`,
+        {
+          kodeIGR: registrySS["registryOraIGR"],
+          dbStatus: registrySS["server"],
+          dtIpModul: ipModulRef.current,
+          dtStationModul: glStationModul,
+        },
+        {
+          headers: {
+            server: registrySS["server"],
+            registryOraIGR: registrySS["registryOraIGR"],
+            registryIp: registrySS["registryOraIP"],
+            registryPort: registrySS["registryPort"],
+            registryServiceName: registrySS["registryServiceName"],
+            registryUser: registrySS["registryUser"],
+            registryPwd: registrySS["registryPwd"],
+            "Cache-Control": "no-cache",
+            "x-api-key": LOGIN_KEY,
+          },
+        }
+      )
+      .then((response) => {
+        if (response["data"]["data"]["memberFlag"] === "Y") {
+          dispatch(setGlDataUser(response["data"]["data"]));
+          dispatch(setFlagMemberUmum(true));
+          navigate("/kasirSelfService");
+        } else {
+          handleToggleMember();
+          dispatch(setFlagMemberUmum(true));
+          dispatch(setGlDataUser(response["data"]["data"]));
+          navigate("/kasirSelfService");
+        }
+        setLoading(false);
+      })
+      .catch(async (error) => {
+        if (error.message === "Network Error") {
+          setMsg("Gagal Terhubung Dengan Gateway");
+        } else {
+          setMsg(error["response"]?.["data"]?.["status"]);
+        }
+
+        await errorLog(error.message);
+        await sendErrorLogWithAPI(
+          error.message,
+          glDtRegistry,
+          URL_GATEWAY,
+          glStationModul,
+          appVersion
+        );
+
+        setOpenModalAlert(true);
+
+        setLoading(false);
+      });
+  };
   return (
     <>
       <Loader loading={loading} />
@@ -857,7 +943,7 @@ function LoginMember() {
 
       <div
         className={`relative overflow-hidden ${
-          isLandscape ? "bg-login" : "bg-login-potrait"
+          isLandscape ? "bg-login" : "bg-login-potrait "
         }`}
       >
         <div
@@ -872,43 +958,59 @@ function LoginMember() {
         </div>
 
         <div
-          className={`flex ${
-            isLandscape ? "flex-row gap-x-12" : "flex-col gap-y-12"
-          } items-center justify-center h-full `}
+          className={`flex flex-col justify-between ${
+            isLandscape ? "h-full" : "h-[90vh]"
+          } p-4`}
         >
-          <div className="text-center">
-            <img
-              src={LogoIGR}
-              alt="LogoIGR"
-              className="mb-10 rounded drop-shadow-lg"
-            />
-            <div>
+          <div
+            className={`flex ${
+              isLandscape
+                ? "flex-row gap-x-12 mt-11"
+                : "flex-col gap-y-12 my-auto"
+            } items-center justify-center `}
+          >
+            <div className="text-center">
+              <img
+                src={LogoIGR}
+                alt="LogoIGR"
+                className="mb-10 rounded drop-shadow-lg"
+              />
+              <div>
+                <h1 className="font-bold text-white text-title text-stroke">
+                  SARANA INFORMASI
+                </h1>
+                <h1 className="font-bold text-white text-title text-stroke">
+                  ANGGOTA INDOGROSIR
+                </h1>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center justify-center">
               <h1 className="font-bold text-white text-title text-stroke">
-                SARANA INFORMASI
+                Silahkan Scan
               </h1>
               <h1 className="font-bold text-white text-title text-stroke">
-                ANGGOTA INDOGROSIR
+                Kartu Anggota anda di sini
               </h1>
+              <img
+                src={IcArrowBot}
+                alt="Arrow Bottom"
+                className="mt-20 animate-bounce"
+              />
             </div>
           </div>
 
-          <div className="flex flex-col items-center justify-center">
-            <h1 className="font-bold text-white text-title text-stroke">
-              Silahkan Scan
-            </h1>
-            <h1 className="font-bold text-white text-title text-stroke">
-              Kartu Anggota anda di sini
-            </h1>
-            <img
-              src={IcArrowBot}
-              alt="Arrow Bottom"
-              className="mt-20 animate-bounce"
-            />
+          <div className={`flex flex-row items-center justify-between w-full`}>
+            <p className="text-white text-subText">V {appVersion}</p>
+            <button
+              onClick={handleButtonMemberUmum}
+              className={`flex flex-row items-center gap-5 justify-center w-[45%] h-[80px] rounded-xl bg-stroke-white bg-blue p-3 text-subText font-bold text-white transform transition duration-200 active:scale-90 bg-gradient-to-t from-blue to-blue3`}
+            >
+              <CiLogin size={50} strokeWidth={1} />
+              Member Umum
+            </button>
           </div>
         </div>
-        <p className="absolute z-10 text-white bottom-4 left-4 text-subText">
-          V {appVersion}
-        </p>
       </div>
     </>
   );

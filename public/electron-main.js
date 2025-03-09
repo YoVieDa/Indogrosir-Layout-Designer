@@ -861,6 +861,15 @@ ipcMain.handle("print_closing", async (event, arg) => {
 // Backup To Zip
 ipcMain.handle("backup_zip", (event, folderPath, outputPath) => {
   try {
+    // Cek apakah folderPath ada
+    if (!fs.existsSync(folderPath)) {
+      return {
+        success: true,
+        message:
+          "Folder tidak ditemukan, dianggap sukses karena tidak ada transaksi yang perlu di zip.",
+      };
+    }
+
     // Membuat instance AdmZip
     const zip = new AdmZip();
 

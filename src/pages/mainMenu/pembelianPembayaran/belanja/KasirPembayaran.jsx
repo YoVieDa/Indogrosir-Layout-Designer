@@ -21,6 +21,7 @@ import {
 } from "../../../../services/redux/dtAllInputtedItemReducer";
 import Modal from "../../../../components/Modal";
 import {
+  AESEncrypt,
   passToChar,
   PAYMENT_KEY,
   PIC_API_KEY,
@@ -35,6 +36,7 @@ import {
 import Lottie from "lottie-react";
 import { toggleMemberMerah } from "../../../../services/redux/memberReducer";
 import {
+  deleteTempMemberFromAPI,
   errorLog,
   generateTXTError,
   sendErrorLogWithAPI,
@@ -107,6 +109,7 @@ function KasirPembayaran() {
   const glUserModul = useSelector((state) => state.glUser.userModul);
   const glStationModul = useSelector((state) => state.glUser.stationModul);
   const glLougoutApp = useSelector((state) => state.glCounter.glLogOutLimitApp);
+  const glIpModul = useSelector((state) => state.glDtIp.dtIp);
   const appVersion = packageJson.version;
 
   const generateDocCode = (noTransaksi) => {
@@ -143,21 +146,43 @@ function KasirPembayaran() {
     }
   };
 
-  const handleNavigate = () => {
-    console.log("handlenavigate", memberMerah);
-    if (memberMerah) {
-      navigate("/");
-      dispatch(addDtTimeStart(""));
-      dispatch(removeAllItems());
-      setOpenModalAlert(false);
-      setOpenModalPayment(false);
+  const handleNavigate = async () => {
+    setLoading(true);
+    const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
+      URL_GATEWAY,
+      userDt["memberID"],
+      glIpModul,
+      glStationModul,
+      glRegistryDt
+    );
+
+    if (doDeleteTempMemberFromAPI.status === true) {
+      if (memberMerah) {
+        navigate("/");
+        dispatch(addDtTimeStart(""));
+        dispatch(removeAllItems());
+        setOpenModalAlert(false);
+        setOpenModalPayment(false);
+      } else {
+        navigate("/");
+        dispatch(addDtTimeStart(""));
+        dispatch(removeAllItems());
+        setOpenModalAlert(false);
+        setOpenModalPayment(false);
+        dispatch(toggleMemberMerah());
+      }
     } else {
-      navigate("/");
-      dispatch(addDtTimeStart(""));
-      dispatch(removeAllItems());
-      setOpenModalAlert(false);
-      setOpenModalPayment(false);
-      dispatch(toggleMemberMerah());
+      if (
+        doDeleteTempMemberFromAPI.message ===
+        "Network doDeleteTempMemberFromAPI"
+      ) {
+        setMsg("Gagal Terhubung Dengan Gateway");
+      } else {
+        setMsg(doDeleteTempMemberFromAPI.message);
+      }
+
+      setLoading(false);
+      setOpenModalAlert(true);
     }
   };
 
@@ -173,7 +198,7 @@ function KasirPembayaran() {
 
       const setNewTimeout = () => {
         newTimeoutId = setTimeout(async () => {
-          handleNavigate();
+          await handleNavigate();
         }, 120 * 1000);
       };
 
@@ -287,9 +312,13 @@ function KasirPembayaran() {
         setInputValue("");
         setSelectedPayment(selectedPayment);
       } else if (openModalPayment === false) {
-        setInputValue("");
-        setSelectedPayment("");
-        setLoading(false);
+        if (selectedPayment !== "") {
+          setInputValue("");
+        } else {
+          setInputValue("");
+          setSelectedPayment("");
+          setLoading(false);
+        }
       } else if (selectedPayment === "ISAKU" && inputValue.length > 15) {
         setMsg(
           "Pembayaran i.Saku belum berhasil\nToken i.saku yang anda masukkan tidak valid"
@@ -617,14 +646,14 @@ function KasirPembayaran() {
         open={openModalAlert}
         successAlert={alertSucc}
         landscape={isLandscape}
-        onClose={() => {
+        onClose={async () => {
           setOpenModalAlert(false);
           setInputValue("");
           setDtHitungPromoPembayaran({});
           setAlertSucc(false);
           setGetPointGift(false);
           setAlertInfo(false);
-          alertSucc ? handleNavigate() : navigate("/kasirSelfService");
+          alertSucc ? await handleNavigate() : navigate("/kasirSelfService");
         }}
       >
         <div className="text-center">

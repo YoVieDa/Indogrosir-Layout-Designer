@@ -17,9 +17,15 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import Loader from "../../../../components/Loader";
 import moment from "moment";
 import ModalAlert from "../../../../components/ModalAlert";
-import { INFO_PROMO_KEY, passToChar, URL_GATEWAY } from "../../../../config";
+import {
+  AESEncrypt,
+  INFO_PROMO_KEY,
+  passToChar,
+  URL_GATEWAY,
+} from "../../../../config";
 import { toggleMemberMerah } from "../../../../services/redux/memberReducer";
 import { useNavigate } from "react-router-dom";
+import { deleteTempMemberFromAPI } from "../../../../controller/kasirPembayaranController";
 
 const dataDummy = [
   {
@@ -54,17 +60,45 @@ function PromoKhusus() {
   const [errMsg, setErrMsg] = useState("");
   const [isLandscape, setIsLandscape] = useState(false);
   const glLougoutApp = useSelector((state) => state.glCounter.glLogOutLimitApp);
+  const glIpModul = useSelector((state) => state.glDtIp.dtIp);
+  const glStationModul = useSelector((state) => state.glUser.stationModul);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const { ipcRenderer } = window.require("electron");
 
-  const handleNavigate = () => {
-    if (memberMerah) {
-      navigate("/");
+  const handleNavigate = async () => {
+    setLoading(true);
+
+    const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
+      URL_GATEWAY,
+      userDt["memberID"],
+      glIpModul,
+      glStationModul,
+      glRegistryDt
+    );
+
+    if (doDeleteTempMemberFromAPI.status === true) {
+      if (memberMerah) {
+        setLoading(false);
+        navigate("/");
+      } else {
+        setLoading(false);
+        navigate("/");
+        dispatch(toggleMemberMerah());
+      }
     } else {
-      navigate("/");
-      dispatch(toggleMemberMerah());
+      // if (
+      //   doDeleteTempMemberFromAPI.message ===
+      //   "Network doDeleteTempMemberFromAPI"
+      // ) {
+      //   setAlertMsg("Gagal Terhubung Dengan Gateway");
+      // } else {
+      //   setAlertMsg(doDeleteTempMemberFromAPI.message);
+      // }
+
+      setLoading(false);
+      // setOpenModalAlert(true);
     }
   };
 
@@ -82,7 +116,7 @@ function PromoKhusus() {
 
     const setNewTimeout = () => {
       newTimeoutId = setTimeout(async () => {
-        handleNavigate();
+        await handleNavigate();
       }, glLougoutApp["lcLogOutLimitApp"] * 1000);
     };
 
