@@ -371,7 +371,7 @@ function KasirPembayaran() {
                 Number(dtHitungPromoPembayaran["totCashback"])
               ),
               totDiscountPercent: 0,
-              transPoint: glDtHitungTotal[0]["transPoint"],
+              transPoint: dtHitungPromoPembayaran["transPoint"],
               transAkumulasiPoint: glDtHitungTotal[0]["transAkumulasiPoint"],
               perolehanPoint: glDtHitungTotal[0]["perolehanPoint"],
               appVersion: appVersion,
@@ -583,6 +583,8 @@ function KasirPembayaran() {
           totDisc: glDtHitungTotal[0]["totDisc"],
           timeStart: glDtTimeStart,
           dtDtlBrngUpdate: glDtHitungTotal[0]["dtDtlBrngUpdate"],
+          totalTransaksiPointUntukFasilitasBank:
+            glDtHitungTotal[0]["totalTransaksiPointUntukFasilitasBank"],
           selectedPayment: selectedPaymentParam,
         },
         {
