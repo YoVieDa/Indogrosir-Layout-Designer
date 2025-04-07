@@ -69,7 +69,7 @@ function SetGatewayUrl({ show, showSetServer, f8Key = false }) {
       return;
     }
 
-    let urlGateway = "http://" + inputPassword.toString() + ":3024";
+    let urlGateway = "http://" + inputPassword.toString() + ":3000";
 
     dispatch(setGlDtGatewayURL(urlGateway.toLowerCase()));
 
