@@ -431,31 +431,22 @@ ipcMain.on("get_data_prn", async (event, arg) => {
 });
 
 // Save Struk file into directory in .txt
-ipcMain.on("save_receipt", async (event, receipt) => {
-  let saveDirectory;
-  saveDirectory = `C:\\CRM\\eKioskElectronPostgre\\${receipt.memberID}`;
+ipcMain.handle("save_receipt", async (event, receipt) => {
+  try {
+    let saveDirectory;
+    saveDirectory = `C:\\CRM\\eKioskElectronPostgre\\${receipt.memberID}`;
 
-  let savePath = path.join(saveDirectory, receipt.path);
+    let savePath = path.join(saveDirectory, receipt.path);
 
-  // Periksa apakah direktori sudah ada
-  if (!fs.existsSync(saveDirectory)) {
-    try {
+    // Periksa apakah direktori sudah ada
+    if (!fs.existsSync(saveDirectory)) {
       // Buat direktori jika belum ada
       fs.mkdirSync(saveDirectory, { recursive: true });
       console.log("Direktori berhasil dibuat:", saveDirectory);
-    } catch (err) {
-      // dialog.showErrorBox(
-      //   "Error",
-      //   `Failed to save receipt txt:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
-      // );
-      console.error("Error creating directory:", err);
-      event.reply("receiptSaveError", err.message);
-      return; // Hentikan proses jika terjadi kesalahan dalam pembuatan direktori
     }
-  }
 
-  // Simpan file ke direktori yang sudah ditentukan
-  try {
+    // Simpan file ke direktori yang sudah ditentukan
+
     if (fs.existsSync(savePath)) {
       // Tambahkan ke file yang sudah ada jika 'pos' true dan file sudah ada
       fs.appendFileSync(savePath, receipt.receiptDt);
@@ -465,14 +456,11 @@ ipcMain.on("save_receipt", async (event, receipt) => {
       fs.writeFileSync(savePath, receipt.receiptDt);
       console.log("File baru berhasil disimpan:", savePath);
     }
-  } catch (err) {
-    // dialog.showErrorBox(
-    //   "Error",
-    //   `Failed to save receipt txt:\n\n${err.message}\n\nStack Trace:\n${err.stack}`
-    // );
-    console.error("Error saving file:", err);
-    event.reply("savingFileError", err.message);
-    return;
+    return { success: true, message: "File saved successfully" };
+  } catch (error) {
+    throw new Error(
+      `Gagal menyimpan struk belanja: \r\nError Message: ${error.message}\r\nError Stack: ${error.stack}`
+    );
   }
 });
 
@@ -683,13 +671,19 @@ ipcMain.handle("print_receipt", async (event, arg) => {
   };
 
   // Printer
+  try {
+    await PosPrinter.print(data, options).catch((error) => {
+      console.error("Detail Error:", error); // Log lebih jelas
+      throw new Error(`Gagal Print Struk: ${error}`);
+    });
 
-  await PosPrinter.print(data, options).catch((error) => {
-    console.error("Detail Error:", error); // Log lebih jelas
-    throw new Error(`Gagal Print Struk: ${error}`);
-  });
-
-  return { success: true, message: "File printed successfully" };
+    return { status: true, message: "File printed successfully" };
+  } catch (error) {
+    return {
+      status: false,
+      message: `Gagal Print Struk: \r\nError Message: ${error.message}\r\nError Stack: ${error.stack}`,
+    };
+  }
 });
 
 // Print Receipt Belanja
@@ -767,36 +761,19 @@ ipcMain.handle("print_receipt_belanja", async (event, arg) => {
     },
   ];
 
-  // // Printer
-  // if (data) {
-  //   PosPrinter.print(data, options)
-  //     .then(console.log)
-  //     .catch((error) => {
-  //       // dialog.showErrorBox(
-  //       //   "Error",
-  //       //   `Failed to print transaction receipt:\n\n${error.message}\n\nStack Trace:\n${error.stack}`
-  //       // );
-  //       console.log(error);
-  //       throw new Error(`Gagal Print Struk: ${error.message}`);
-  //     });
-  // }
   try {
     // Tunggu proses printing selesai
     await PosPrinter.print(data, options).catch((error) => {
       console.error("Detail Error:", error); // Log lebih jelas
       throw new Error(`Gagal Print Struk: ${error}`);
-      // if(error.includes("Make sure your printer is connected") && arg.printerName === true){
-      // return { success: true, message: "File printed successfully" };
-      // } else {
-      //   throw new Error(`Gagal Print Struk: ${error}`);
-      // }
     });
 
-    return { success: true, message: "File printed successfully" };
+    return { status: true, message: "File printed successfully" };
   } catch (error) {
-    throw new Error(
-      `Gagal Print Struk: \r\nError Message: ${error.message}\r\nError Stack: ${error.stack}`
-    );
+    return {
+      status: false,
+      message: `Gagal Print Struk: \r\nError Message: ${error.message}\r\nError Stack: ${error.stack}`,
+    };
   }
 });
 
@@ -843,18 +820,14 @@ ipcMain.handle("print_closing", async (event, arg) => {
     await PosPrinter.print(data, options).catch((error) => {
       console.error("Detail Error:", error); // Log lebih jelas
       throw new Error(`Gagal Print Struk: ${error}`);
-      // if(error.includes("Make sure your printer is connected") && arg.printerName === true){
-      // return { success: true, message: "File printed successfully" };
-      // } else {
-      //   throw new Error(`Gagal Print Struk: ${error}`);
-      // }
     });
 
-    return { success: true, message: "File printed successfully" };
+    return { status: true, message: "File printed successfully" };
   } catch (error) {
-    throw new Error(
-      `Gagal Print Struk Closing: \r\nError Message: ${error.message}\r\nError Stack: ${error.stack}`
-    );
+    return {
+      status: false,
+      message: `Gagal Print Struk Closing: \r\nError Message: ${error.message}\r\nError Stack: ${error.stack}`,
+    };
   }
 });
 

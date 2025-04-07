@@ -416,7 +416,7 @@ function CekSaldoPoinIGR() {
         };
 
         await ipcRenderer
-          .invoke("save_receiptpos", dtToSaveReceipt)
+          .invoke("save_receipt", dtToSaveReceipt)
           .then(async (result) => {})
           .catch(async (error) => {
             await errorLog(error.message);
@@ -439,25 +439,46 @@ function CekSaldoPoinIGR() {
                 ).trim()
               : "eKioskPrinter",
         };
+        for (let i = 0; i < 3; i++) {
+          try {
+            const doPrintReceipt = await ipcRenderer.invoke(
+              "print_receipt",
+              dtToPrint
+            );
 
-        await ipcRenderer
-          .invoke("print_receipt", dtToPrint)
-          .then(async (result) => {
-            setPrintSuccess(true);
-            setAlertMsg("Berhasil Cetak Poin");
-            setOpenModalAlert(true);
-            setLoading(false);
-          })
-          .catch(async (error) => {
-            await errorLog(error.message);
+            if (doPrintReceipt?.status) {
+              setPrintSuccess(true);
+              setAlertMsg("Berhasil Cetak Poin");
+              setOpenModalAlert(true);
+              break;
+            } else {
+              if (i === 2) {
+                await errorLog(
+                  doPrintReceipt?.message || "Gagal Print - No message"
+                );
+                await sendErrorLogWithAPI(
+                  doPrintReceipt?.message || "Gagal Print - No message",
+                  glRegistryDt,
+                  URL_GATEWAY,
+                  glStationModul,
+                  appVersion
+                );
+              }
+            }
+          } catch (error) {
+            await errorLog(error?.message || "Gagal Print - No message");
             await sendErrorLogWithAPI(
-              error.message,
+              error?.message || "Gagal Print - No message",
               glRegistryDt,
               URL_GATEWAY,
               glStationModul,
               appVersion
             );
-          });
+            break;
+          }
+        }
+
+        setLoading(false);
       })
       .catch(async function (error) {
         await errorLog(error["response"]["data"]["status"]);

@@ -604,19 +604,45 @@ function LoginMember() {
                 : "eKioskPrinter",
           };
 
-          await ipcRenderer
-            .invoke("print_closing", dtToPrint)
-            .then(async (result) => {
-              setOpenModalClosing(false);
-              dispatch(setGlDtShift(false));
-              dispatch(setFlagClosing(true));
-              setOpenModalAlert(true);
-              setResSuccess(true);
-              setMsg("Berhasil Melakukan Closing");
-              //await delay(3500);
-              await handleLogoutState();
-            })
-            .catch(async (error) => {
+          // Kalau gagal print coba print lagi sampai 3x percobaan
+          for (let i = 0; i < 3; i++) {
+            try {
+              const doPrintReceiptClosing = await ipcRenderer.invoke(
+                "print_closing",
+                dtToPrint
+              );
+
+              if (doPrintReceiptClosing?.status) {
+                setOpenModalClosing(false);
+                dispatch(setGlDtShift(false));
+                dispatch(setFlagClosing(true));
+                setOpenModalAlert(true);
+                setResSuccess(true);
+                setMsg("Berhasil Melakukan Closing");
+                //await delay(3500);
+                await handleLogoutState();
+
+                break;
+              } else {
+                if (i === 2) {
+                  await errorLog(
+                    doPrintReceiptClosing?.message || "Gagal Print - No message"
+                  );
+                  await sendErrorLogWithAPI(
+                    doPrintReceiptClosing?.message ||
+                      "Gagal Print - No message",
+                    glDtRegistry,
+                    URL_GATEWAY,
+                    glStationModul,
+                    appVersion
+                  );
+                  setOpenModalClosing(false);
+                  setOpenModalAlert(true);
+                  setMsg("Gagal Print Struk Closing");
+                  setLoading(false);
+                }
+              }
+            } catch (error) {
               await errorLog(error.message);
               await sendErrorLogWithAPI(
                 error.message,
@@ -629,7 +655,10 @@ function LoginMember() {
               setOpenModalAlert(true);
               setMsg("Gagal Print Struk Closing");
               setLoading(false);
-            });
+
+              break;
+            }
+          }
         }
       })
       .catch(async function (error) {
@@ -700,26 +729,6 @@ function LoginMember() {
             setOpenModalAlert(true);
             setLoading(false);
           });
-        // // Listen for the event
-        // ipcRenderer.on("delete_registry_userstation", (event, arg) => {
-        //   if (arg === "Gagal menghapus registry user station") {
-        //   } else {
-        //     // setResSuccess(true);
-        //     // setMsg("Berhasil Menghapus Modul");
-        //     // setOpenModalAlert(true);
-        //     dispatch(setGlDataUserModul(""));
-        //     dispatch(setGlDataStationModul(""));
-        //     dispatch(setGlDataNamaModul(""));
-        //     setResSuccess(true);
-        //     setMsg("Logout Berhasil");
-        //     navigate("/loginPSS");
-        //     setLoading(false);
-        //   }
-        // });
-
-        // return () => {
-        //   ipcRenderer.removeAllListeners();
-        // };
       })
       .catch(async function (error) {
         if (error.message === "Network Error") {
@@ -994,20 +1003,20 @@ function LoginMember() {
               <img
                 src={IcArrowBot}
                 alt="Arrow Bottom"
-                className="mt-20 animate-bounce"
+                className="mt-20 animate-bounce "
               />
             </div>
           </div>
 
           <div className={`flex flex-row items-center justify-between w-full`}>
-            <p className="text-white text-subText">V {appVersion}</p>
             <button
               onClick={handleButtonMemberUmum}
-              className={`flex flex-row items-center gap-5 justify-center w-[45%] h-[80px] rounded-xl bg-stroke-white bg-blue p-3 text-subText font-bold text-white transform transition duration-200 active:scale-90 bg-gradient-to-t from-blue to-blue3`}
+              className={`flex flex-row items-center gap-5 justify-center w-[32%] h-[80px] rounded-xl bg-stroke-white bg-blue p-3 text-subText font-bold text-white transform transition duration-200 active:scale-90 bg-gradient-to-t from-blue to-blue3`}
             >
               <CiLogin size={50} strokeWidth={1} />
-              Member Umum
+              Non Member
             </button>
+            <p className="font-bold text-black text-subText ">V {appVersion}</p>
           </div>
         </div>
       </div>
