@@ -43,13 +43,15 @@ function HadiahUntukAnda() {
     idx: 0,
     namaPromo: "",
     totalBelanja: 0,
-    lbKeterangan: { tmpSlIsaku: null, tmpkj: null },
+    totalBelanjaIsaku: 0,
+    totalKunjungan: 0,
     hadiah: "",
     syaratB: 0,
     syaratBIsaku: 0,
     syaratK: "",
     kB: 0,
     kK: 0,
+    kIsaku: 0,
   });
   const glRegistryDt = useSelector(
     (state) => state.glRegistry.dtDecryptedRegistry
@@ -227,9 +229,9 @@ function HadiahUntukAnda() {
         }
       );
 
-      const totalBelanja =
-        responseDtKunjungan["data"]["tmpSl"] +
-        responseDtKunjungan["data"]["tmpSlIsaku"];
+      const totalBelanja = responseDtKunjungan["data"]["tmpSl"];
+      const totalBelanjaIsaku = responseDtKunjungan["data"]["tmpSlIsaku"];
+      const totalKunjungan = responseDtKunjungan["data"]["tmpkj"];
 
       console.log("responseDtKunjungan: ", responseDtKunjungan);
 
@@ -264,17 +266,15 @@ function HadiahUntukAnda() {
             "lyh_namapromo"
           ].toString(),
         totalBelanja: totalBelanja,
-        lbKeterangan: {
-          tmpSlIsaku:
-            responseDtHadiahOnLabel["data"]["lbKeterangan"]["tmpSlIsaku"],
-          tmpkj: responseDtHadiahOnLabel["data"]["lbKeterangan"]["tmpkj"],
-        },
+        totalBelanjaIsaku: totalBelanjaIsaku,
+        totalKunjungan: totalKunjungan,
         hadiah: responseDtHadiahOnLabel["data"]["hadiah"],
         syaratB: responseDtHadiahOnLabel["data"]["syaratB"],
         syaratBIsaku: responseDtHadiahOnLabel["data"]["syaratBIsaku"],
         syaratK: responseDtHadiahOnLabel["data"]["syaratK"],
         kB: responseDtHadiahOnLabel["data"]["kB"],
         kK: responseDtHadiahOnLabel["data"]["kK"],
+        kIsaku: responseDtHadiahOnLabel["data"]["kBIsaku"],
       });
 
       console.log(detailInfoLoyalty);
@@ -305,7 +305,6 @@ function HadiahUntukAnda() {
       .replace(/\./g, ",");
   };
 
-  const bgImage = memberMerah ? BgMM2 : BgMB2;
   return (
     <>
       <Loader loading={loadingBg} merah={memberMerah} nobg={false} />
@@ -346,9 +345,9 @@ function HadiahUntukAnda() {
             </>
           )}
 
-          {detailInfoLoyalty.lbKeterangan.tmpSlIsaku == null ? (
+          {detailInfoLoyalty.syaratBIsaku === 0 ? (
             <p className="text-subText">
-              <b>Kunjungan:</b> {detailInfoLoyalty.lbKeterangan.tmpkj} Kali
+              <b>Kunjungan:</b> {detailInfoLoyalty.totalKunjungan} Kali
             </p>
           ) : (
             <>
@@ -357,11 +356,11 @@ function HadiahUntukAnda() {
                   Belanja dengan ISAKU:
                 </p>
                 <p className="self-center font-semibold text-subText">
-                  {formattedNumber(detailInfoLoyalty.lbKeterangan.tmpSlIsaku)}
+                  {formattedNumber(detailInfoLoyalty.totalBelanjaIsaku)}
                 </p>
               </div>
               <p className="text-subText">
-                <b>Kunjungan:</b> {detailInfoLoyalty.lbKeterangan.tmpkj} Kali
+                <b>Kunjungan:</b> {detailInfoLoyalty.totalKunjungan} Kali
               </p>
             </>
           )}
@@ -402,11 +401,21 @@ function HadiahUntukAnda() {
                 {detailInfoLoyalty.syaratK ? detailInfoLoyalty.syaratK : "-"}
               </p>
             </div>
-            <div className="flex flex-row gap-5 py-2 align-middle border-t border-b border-black border-solid">
+            <div className="flex flex-col gap-2 py-2 align-middle border-t border-b border-black border-solid">
               <p className="font-semibold text-subText">Kekurangan Belanja: </p>
-              <p className="self-center text-subText ">
+              <p className="self-start text-subText ">
                 {detailInfoLoyalty.kB
                   ? formattedNumber(detailInfoLoyalty.kB)
+                  : "-"}
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 py-2 align-middle border-b border-black border-solid">
+              <p className="font-semibold text-subText">
+                Kekurangan Belanja ISAKU:{" "}
+              </p>
+              <p className="self-start text-subText ">
+                {detailInfoLoyalty.kIsaku
+                  ? formattedNumber(detailInfoLoyalty.kIsaku)
                   : "-"}
               </p>
             </div>
