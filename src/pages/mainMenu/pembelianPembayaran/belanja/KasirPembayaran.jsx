@@ -489,23 +489,78 @@ function KasirPembayaran() {
             };
 
             console.log("mulai print");
-            await ipcRenderer
-              .invoke("print_receipt_belanja", dtToPrint)
-              .then(async (result) => {
-                setInputValue("");
-                dispatch(removeAllItems());
-                await getTimeStart();
-                setMsg(
-                  "Terima kasih telah berbelanja di Indogrosir\nSilahkan tunjukkan struk ke area checker kami untuk proses verifikasi"
+            // await ipcRenderer
+            //       .invoke("print_receipt_belanja", dtToPrint)
+            //       .then(async (result) => {
+            //         setInputValue("");
+            //         dispatch(removeAllItems());
+            //         await getTimeStart();
+            //         setMsg(
+            //           "Terima kasih telah berbelanja di Indogrosir\nSilahkan tunjukkan struk ke area checker kami untuk proses verifikasi"
+            //         );
+
+            //         setAlertSucc(true);
+            //         setOpenModalAlert(true);
+            //         setLoading(false);
+
+            //         console.log("sudah print");
+            //       })
+            //       .catch(async (error) => {
+            //         await errorLog(error.message);
+            //         await sendErrorLogWithAPI(
+            //           error.message,
+            //           glRegistryDt,
+            //           URL_GATEWAY,
+            //           glStationModul,
+            //           appVersion
+            //         );
+            //         setMsg("Gagal Print Struk");
+            //         setInputValue("");
+            //         setOpenModalAlert(true);
+            //         setLoading(false);
+            //       });
+
+            // Kalau gagal print coba print lagi sampai 3x percobaan
+            for (let i = 0; i < 3; i++) {
+              console.log("Iterasi ke - ", i);
+              try {
+                const doPrintReceiptBelanja = await ipcRenderer.invoke(
+                  "print_receipt_belanja",
+                  dtToPrint
                 );
 
-                setAlertSucc(true);
-                setOpenModalAlert(true);
-                setLoading(false);
+                if (doPrintReceiptBelanja?.status) {
+                  setInputValue("");
+                  dispatch(removeAllItems());
+                  await getTimeStart();
+                  setMsg(
+                    "Terima kasih telah berbelanja di Indogrosir\nSilahkan tunjukkan struk ke area checker kami untuk proses verifikasi"
+                  );
 
-                console.log("sudah print");
-              })
-              .catch(async (error) => {
+                  setAlertSucc(true);
+                  setOpenModalAlert(true);
+
+                  break;
+                } else {
+                  if (i === 2) {
+                    await errorLog(
+                      doPrintReceiptBelanja?.message ||
+                        "Gagal Print - No message"
+                    );
+                    await sendErrorLogWithAPI(
+                      doPrintReceiptBelanja?.message ||
+                        "Gagal Print - No message",
+                      glRegistryDt,
+                      URL_GATEWAY,
+                      glStationModul,
+                      appVersion
+                    );
+                    setMsg("Gagal Print Struk");
+                    setInputValue("");
+                    setOpenModalAlert(true);
+                  }
+                }
+              } catch (error) {
                 await errorLog(error.message);
                 await sendErrorLogWithAPI(
                   error.message,
@@ -517,8 +572,19 @@ function KasirPembayaran() {
                 setMsg("Gagal Print Struk");
                 setInputValue("");
                 setOpenModalAlert(true);
-                setLoading(false);
-              });
+
+                break;
+              }
+            }
+
+            setLoading(false);
+
+            // setTimeout(() => {
+            //   setOpenModalAlert(false);
+            //   setInputValue("");
+            //   setAlertSucc(false);
+            //   navigate("/kasirSelfService");
+            // }, 10000); // 10000 ms = 10 detik
           })
           .catch(async function (error) {
             console.log(error);

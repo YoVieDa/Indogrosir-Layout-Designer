@@ -137,6 +137,7 @@ function HiddenInput({ closingState, logoutState }) {
                   "Cache-Control": "no-cache",
                   "x-api-key": LOGIN_KEY,
                 },
+                timeout: 7000,
               }
             )
             .then((response) => {
@@ -159,10 +160,17 @@ function HiddenInput({ closingState, logoutState }) {
             .catch(function (error) {
               console.log(error);
 
-              if (error.message === "Network Error") {
-                setMsg("Gagal Terhubung Dengan Gateway");
+              if (error.code === "ECONNABORTED") {
+                setMsg("Request timeout. Server tidak merespons.");
+              } else if (error.message === "Network Error") {
+                setMsg("Gagal terhubung dengan server.");
+              } else if (error.response) {
+                const apiMsg =
+                  error.response.data?.status ||
+                  "Terjadi kesalahan pada server.";
+                setMsg(apiMsg);
               } else {
-                setMsg(error["response"]?.["data"]?.["status"]);
+                setMsg("Terjadi kesalahan yang tidak diketahui.");
               }
 
               setInputValue("");
