@@ -662,7 +662,7 @@ ipcMain.handle("print_receipt", async (event, arg) => {
 
   const options = {
     printerName: arg.printerName,
-    timeOutPerLine: 5000,
+    timeOutPerLine: 10000,
     silent: true,
     pageSize: "80mm",
     margin: "0 0 0 2mm",
@@ -690,7 +690,7 @@ ipcMain.handle("print_receipt", async (event, arg) => {
 ipcMain.handle("print_receipt_belanja", async (event, arg) => {
   const options = {
     printerName: arg.printerName,
-    timeOutPerLine: 5000,
+    timeOutPerLine: 10000,
     silent: true,
     pageSize: "80mm",
     margin: "0 0 0 2mm",
@@ -699,21 +699,21 @@ ipcMain.handle("print_receipt_belanja", async (event, arg) => {
   };
 
   const data = [
-    {
-      type: "image", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
-      path: path.join(
-        __dirname,
-        "..",
-        "..",
-        "public",
-        "images",
-        "Header IGR",
-        `${arg.kodeIGR}.jpg`
-      ),
-      position: "left",
-      width: "250px",
-      height: "100px",
-    },
+    // {
+    //   type: "image", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
+    //   path: path.join(
+    //     __dirname,
+    //     "..",
+    //     "..",
+    //     "public",
+    //     "images",
+    //     "Header IGR",
+    //     `${arg.kodeIGR}.jpg`
+    //   ),
+    //   position: "left",
+    //   width: "250px",
+    //   height: "100px",
+    // },
     {
       type: "text", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
       value: arg.strukData,
@@ -781,7 +781,7 @@ ipcMain.handle("print_receipt_belanja", async (event, arg) => {
 ipcMain.handle("print_closing", async (event, arg) => {
   const options = {
     printerName: arg.printerName,
-    timeOutPerLine: 5000,
+    timeOutPerLine: 10000,
     silent: true,
     pageSize: "80mm",
     margin: "0 0 0 2mm",

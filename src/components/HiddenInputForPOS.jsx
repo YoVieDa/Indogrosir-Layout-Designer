@@ -36,163 +36,170 @@ function HiddenInputForPOS() {
   const handleEnterPress = async (e) => {
     if (e.key === "Enter") {
       setLoading(true);
-      await axios
-        .post(
-          `${URL_GATEWAY}/servicePayment/inputItem`,
-          {
-            plu: inputValue,
-            kodeIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
-            dbStatus: glRegistryDt["glRegistryDt"]["server"],
-            dtMember: {
-              memberID: userDt["memberID"],
-              memberFlag: userDt["memberFlag"],
-              cus_idsegment: userDt["cus_idsegment"],
-              cus_jenismember: userDt["cus_jenismember"],
-            },
-            dtInputtedItem: dtAllItem,
-          },
-          {
-            headers: {
-              server: glRegistryDt["glRegistryDt"]["server"],
-              registryOraIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
-              registryIp: glRegistryDt["glRegistryDt"]["registryOraIP"],
-              registryPort: glRegistryDt["glRegistryDt"]["registryPort"],
-              registryServiceName:
-                glRegistryDt["glRegistryDt"]["registryServiceName"],
-              registryUser: glRegistryDt["glRegistryDt"]["registryUser"],
-              registryPwd: glRegistryDt["glRegistryDt"]["registryPwd"],
-              "Cache-Control": "no-cache",
-              "x-api-key": PAYMENT_KEY,
-            },
-          }
-        )
-        .then(async (response) => {
-          setInputValue("");
-          dispatch(replaceArray(response["data"]["dtInputtedItemUpdate"]));
-          console.log(
-            "hiddeninputpos",
-            response["data"]["dtInputtedItemUpdate"]
-          );
-
-          console.log(
-            response["data"]["dtInputtedItemUpdate"][
-              response["data"]["dtInputtedItemUpdate"].length - 1
-            ]["qty"]
-          );
-          if (
-            response["data"]["dtInputtedItemUpdate"][
-              response["data"]["dtInputtedItemUpdate"].length - 1
-            ]["dtSimilarPLU"][0]["unit"] === "KG" &&
-            response["data"]["dtInputtedItemUpdate"][
-              response["data"]["dtInputtedItemUpdate"].length - 1
-            ]["qty"] > 0
-          ) {
-            const handleKGItem = async () => {
-              await axios
-                .post(
-                  `${URL_GATEWAY}/servicePayment/inputJumlah`,
-                  {
-                    plu: response["data"]["dtInputtedItemUpdate"][
-                      response["data"]["dtInputtedItemUpdate"].length - 1
-                    ]["plu"],
-                    kodeIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
-                    dbStatus: glRegistryDt["glRegistryDt"]["server"],
-                    inputtedQty: 0,
-                    dtMember: {
-                      memberID: userDt["memberID"],
-                      memberFlag: userDt["memberFlag"],
-                      cus_idsegment: userDt["cus_idsegment"],
-                      cus_jenismember: userDt["cus_jenismember"],
-                    },
-                    dtPluSelected: response["data"]["dtInputtedItemUpdate"][
-                      response["data"]["dtInputtedItemUpdate"].length - 1
-                    ]["dtSimilarPLU"].filter(
-                      (item) =>
-                        item.plu ===
-                        response["data"]["dtInputtedItemUpdate"][
-                          response["data"]["dtInputtedItemUpdate"].length - 1
-                        ]["plu"]
-                    )[0],
-                    dtInputtedItem: response["data"]["dtInputtedItemUpdate"],
-                  },
-                  {
-                    headers: {
-                      server: glRegistryDt["glRegistryDt"]["server"],
-                      registryOraIGR:
-                        glRegistryDt["glRegistryDt"]["registryOraIGR"],
-                      registryIp: glRegistryDt["glRegistryDt"]["registryOraIP"],
-                      registryPort:
-                        glRegistryDt["glRegistryDt"]["registryPort"],
-                      registryServiceName:
-                        glRegistryDt["glRegistryDt"]["registryServiceName"],
-                      registryUser:
-                        glRegistryDt["glRegistryDt"]["registryUser"],
-                      registryPwd: glRegistryDt["glRegistryDt"]["registryPwd"],
-                      "Cache-Control": "no-cache",
-                      "x-api-key": PAYMENT_KEY,
-                    },
-                  }
-                )
-                .then((response) => {
-                  console.log(response["data"]);
-                  dispatch(replaceArray(response["data"]["dtInputtedItem"]));
-                  if (
-                    response["data"]["promoMStatusBerlakuHrgNormalMsg"] !== ""
-                  ) {
-                    setAlertErrTitle(false);
-                    setAlertErrIc(false);
-                    setOpenModalAlert(true);
-                    setMsg(response["data"]["promoMStatusBerlakuHrgNormalMsg"]);
-                    setLoading(false);
-                  } else {
-                    navigate("/kasirSelfService");
-                    setLoading(false);
-                  }
-                })
-                .catch(function (error) {
-                  console.log(error);
-
-                  setMsg(error["response"]["data"]["status"]);
-                  setLoading(false);
-                  setOpenModalAlert(true);
-                });
-            };
-
-            await handleKGItem();
-          } else {
-            navigate("/inputJumlah", {
-              state: {
-                idx: response["data"]["dtInputtedItemUpdate"][
-                  response["data"]["dtInputtedItemUpdate"].length - 1
-                ]["plu"].slice(-1),
-                idxSelectedItem:
-                  response["data"]["dtInputtedItemUpdate"].length - 1,
-                inputTambah: true,
+      console.log("", inputValue);
+      if (!loading) {
+        await axios
+          .post(
+            `${URL_GATEWAY}/servicePayment/inputItem`,
+            {
+              plu: inputValue,
+              kodeIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
+              dbStatus: glRegistryDt["glRegistryDt"]["server"],
+              dtMember: {
+                memberID: userDt["memberID"],
+                memberFlag: userDt["memberFlag"],
+                cus_idsegment: userDt["cus_idsegment"],
+                cus_jenismember: userDt["cus_jenismember"],
               },
-            });
-
-            setLoading(false);
-          }
-        })
-        .catch(function (error) {
-          console.log(error);
-          if (
-            error["response"]["data"]["status"].includes("Gagal Ambil Data")
-          ) {
-            setMsg(error["response"]["data"]["status"]);
-
+              dtInputtedItem: dtAllItem,
+            },
+            {
+              headers: {
+                server: glRegistryDt["glRegistryDt"]["server"],
+                registryOraIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
+                registryIp: glRegistryDt["glRegistryDt"]["registryOraIP"],
+                registryPort: glRegistryDt["glRegistryDt"]["registryPort"],
+                registryServiceName:
+                  glRegistryDt["glRegistryDt"]["registryServiceName"],
+                registryUser: glRegistryDt["glRegistryDt"]["registryUser"],
+                registryPwd: glRegistryDt["glRegistryDt"]["registryPwd"],
+                "Cache-Control": "no-cache",
+                "x-api-key": PAYMENT_KEY,
+              },
+            }
+          )
+          .then(async (response) => {
             setInputValue("");
-            setLoading(false);
-            setOpenModalAlert(true);
-          } else {
-            setMsg(error["response"]["data"]["status"]);
+            dispatch(replaceArray(response["data"]["dtInputtedItemUpdate"]));
+            console.log(
+              "hiddeninputpos",
+              response["data"]["dtInputtedItemUpdate"]
+            );
 
-            setInputValue("");
-            setLoading(false);
-            setOpenModalAlert(true);
-            setAlertInfo(true);
-          }
-        });
+            console.log(
+              response["data"]["dtInputtedItemUpdate"][
+                response["data"]["dtInputtedItemUpdate"].length - 1
+              ]["qty"]
+            );
+            if (
+              response["data"]["dtInputtedItemUpdate"][
+                response["data"]["dtInputtedItemUpdate"].length - 1
+              ]["dtSimilarPLU"][0]["unit"] === "KG" &&
+              response["data"]["dtInputtedItemUpdate"][
+                response["data"]["dtInputtedItemUpdate"].length - 1
+              ]["qty"] > 0
+            ) {
+              const handleKGItem = async () => {
+                await axios
+                  .post(
+                    `${URL_GATEWAY}/servicePayment/inputJumlah`,
+                    {
+                      plu: response["data"]["dtInputtedItemUpdate"][
+                        response["data"]["dtInputtedItemUpdate"].length - 1
+                      ]["plu"],
+                      kodeIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
+                      dbStatus: glRegistryDt["glRegistryDt"]["server"],
+                      inputtedQty: 0,
+                      dtMember: {
+                        memberID: userDt["memberID"],
+                        memberFlag: userDt["memberFlag"],
+                        cus_idsegment: userDt["cus_idsegment"],
+                        cus_jenismember: userDt["cus_jenismember"],
+                      },
+                      dtPluSelected: response["data"]["dtInputtedItemUpdate"][
+                        response["data"]["dtInputtedItemUpdate"].length - 1
+                      ]["dtSimilarPLU"].filter(
+                        (item) =>
+                          item.plu ===
+                          response["data"]["dtInputtedItemUpdate"][
+                            response["data"]["dtInputtedItemUpdate"].length - 1
+                          ]["plu"]
+                      )[0],
+                      dtInputtedItem: response["data"]["dtInputtedItemUpdate"],
+                    },
+                    {
+                      headers: {
+                        server: glRegistryDt["glRegistryDt"]["server"],
+                        registryOraIGR:
+                          glRegistryDt["glRegistryDt"]["registryOraIGR"],
+                        registryIp:
+                          glRegistryDt["glRegistryDt"]["registryOraIP"],
+                        registryPort:
+                          glRegistryDt["glRegistryDt"]["registryPort"],
+                        registryServiceName:
+                          glRegistryDt["glRegistryDt"]["registryServiceName"],
+                        registryUser:
+                          glRegistryDt["glRegistryDt"]["registryUser"],
+                        registryPwd:
+                          glRegistryDt["glRegistryDt"]["registryPwd"],
+                        "Cache-Control": "no-cache",
+                        "x-api-key": PAYMENT_KEY,
+                      },
+                    }
+                  )
+                  .then((response) => {
+                    console.log(response["data"]);
+                    dispatch(replaceArray(response["data"]["dtInputtedItem"]));
+                    if (
+                      response["data"]["promoMStatusBerlakuHrgNormalMsg"] !== ""
+                    ) {
+                      setAlertErrTitle(false);
+                      setAlertErrIc(false);
+                      setOpenModalAlert(true);
+                      setMsg(
+                        response["data"]["promoMStatusBerlakuHrgNormalMsg"]
+                      );
+                      setLoading(false);
+                    } else {
+                      navigate("/kasirSelfService");
+                      setLoading(false);
+                    }
+                  })
+                  .catch(function (error) {
+                    console.log(error);
+
+                    setMsg(error["response"]["data"]["status"]);
+                    setLoading(false);
+                    setOpenModalAlert(true);
+                  });
+              };
+
+              await handleKGItem();
+            } else {
+              navigate("/inputJumlah", {
+                state: {
+                  idx: response["data"]["dtInputtedItemUpdate"][
+                    response["data"]["dtInputtedItemUpdate"].length - 1
+                  ]["plu"].slice(-1),
+                  idxSelectedItem:
+                    response["data"]["dtInputtedItemUpdate"].length - 1,
+                  inputTambah: true,
+                },
+              });
+
+              setLoading(false);
+            }
+          })
+          .catch(function (error) {
+            console.log(error);
+            if (
+              error["response"]["data"]["status"].includes("Gagal Ambil Data")
+            ) {
+              setMsg(error["response"]["data"]["status"]);
+
+              setInputValue("");
+              setLoading(false);
+              setOpenModalAlert(true);
+            } else {
+              setMsg(error["response"]["data"]["status"]);
+
+              setInputValue("");
+              setLoading(false);
+              setOpenModalAlert(true);
+              setAlertInfo(true);
+            }
+          });
+      }
     }
   };
 
