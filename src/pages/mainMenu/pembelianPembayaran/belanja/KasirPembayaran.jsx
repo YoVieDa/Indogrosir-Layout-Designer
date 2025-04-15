@@ -555,7 +555,9 @@ function KasirPembayaran() {
                       glStationModul,
                       appVersion
                     );
-                    setMsg("Gagal Print Struk");
+                    setMsg(
+                      "Gagal Print Struk\nSilahkan hubungi karyawan Indogrosir terdekat"
+                    );
                     setInputValue("");
                     setOpenModalAlert(true);
                   }
@@ -684,7 +686,9 @@ function KasirPembayaran() {
   };
 
   const handleInputChange = (event) => {
-    setInputValue(event.target.value); // Memperbarui state input dengan nilai dari input event
+    if (openModalPayment) {
+      setInputValue(event.target.value); // Memperbarui state input dengan nilai dari input event
+    }
   };
 
   const formattedNumber = (number) => {
@@ -721,7 +725,11 @@ function KasirPembayaran() {
           setAlertSucc(false);
           setGetPointGift(false);
           setAlertInfo(false);
-          alertSucc ? await handleNavigate() : navigate("/kasirSelfService");
+          alertSucc
+            ? await handleNavigate()
+            : msg.includes("Gagal Print Struk")
+            ? handleNavigate()
+            : navigate("/kasirSelfService");
         }}
       >
         <div className="text-center">
