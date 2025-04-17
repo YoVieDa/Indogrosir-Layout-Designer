@@ -182,9 +182,8 @@ function HiddenInputForPOS() {
           })
           .catch(function (error) {
             console.log(error);
-            if (
-              error["response"]["data"]["status"].includes("Gagal Ambil Data")
-            ) {
+            const statusCode = error?.response?.status;
+            if (statusCode === 500) {
               setMsg(error["response"]["data"]["status"]);
 
               setInputValue("");

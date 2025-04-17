@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import { IcErr, LogoIGR } from "../../../../assets";
+import { IcErr, IcWarn, LogoIGR } from "../../../../assets";
 import StandardBtn from "../../../../components/StandardBtn";
 import axios from "axios";
 import ItemPerPLUCard from "../../../../components/ItemPerPLUCard";
@@ -53,6 +53,7 @@ function KasirSelfService() {
   const [total, setTotal] = useState(0);
   const [pembulatan, setPembulatan] = useState(0);
   const [promoMdIdx, setPromoMdIdx] = useState(0);
+  const [alertInfo, setAlertInfo] = useState(false);
   const glDtDocInfo = useSelector((state) => state.glDocInfo.info);
   const glDtTimeStart = useSelector((state) => state.glDocInfo.timeStart);
   const glUserModul = useSelector((state) => state.glUser.userModul);
@@ -364,10 +365,18 @@ function KasirSelfService() {
         })
         .catch(function (error) {
           console.log(error);
+          const statusCode = error?.response?.status;
 
-          setMsg(error["response"]["data"]["status"]);
-          setLoading(false);
-          setOpenModalAlert(true);
+          if (statusCode === 500) {
+            setMsg(error["response"]["data"]["status"]);
+            setLoading(false);
+            setOpenModalAlert(true);
+          } else {
+            setMsg(error["response"]["data"]["status"]);
+            setLoading(false);
+            setOpenModalAlert(true);
+            setAlertInfo(true);
+          }
         });
     }
   };
@@ -389,19 +398,43 @@ function KasirSelfService() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [dtAllItem]);
+  }, [dtAllItem, isLandscape]);
+
+  const memberNameFormat = (nama) => {
+    // Format huruf kapital di awal
+    const formatKata = (kata) =>
+      kata.charAt(0).toUpperCase() + kata.slice(1).toLowerCase();
+
+    const hasil = nama.split(" ").map(formatKata).join(" ");
+
+    // Cek panjang hasil
+    if (hasil.length > 25) {
+      return hasil.slice(0, 25) + "...";
+    }
+
+    return hasil;
+  };
 
   return (
     <>
       <Loader loading={loading} />
       <ModalAlert
         open={openModalAlert}
-        onClose={() => setOpenModalAlert(false)}
+        onClose={() => {
+          setOpenModalAlert(false);
+          setAlertInfo(false);
+        }}
       >
         <div className="text-center">
-          <img src={IcErr} alt="Warn" className="mx-auto" />
+          <img
+            src={alertInfo ? IcWarn : IcErr}
+            alt="Warn"
+            className="mx-auto"
+          />
           <div className="mx-auto my-4">
-            <h3 className="font-black text-gray-800 text-text">Error</h3>
+            <h3 className="font-black text-gray-800 text-text">
+              {alertInfo ? "Warning" : "Error"}
+            </h3>
 
             <p
               className="mt-5 text-lg text-gray-500"
@@ -492,20 +525,26 @@ function KasirSelfService() {
               className="drop-shadow-lg rounded w-[544px] h-[186px] self-center"
             />
 
-            <p className="mt-10 mb-10 font-bold text-center text-white text-subTitle">
+            <p className="mt-10 mb-5 font-bold text-center text-white text-subTitle">
               Silahkan Scan Barang Yang Ingin Dibeli
             </p>
           </>
         )}
         <div className="w-[100%] h-[100%] flex flex-col bg-gray-100 rounded-[20px] mb-10 p-10">
+          <p className={`mb-5 font-bold text-left  text-subText`}>
+            <span className="text-black">Nama Member: </span>
+            <span
+              className={`${memberMerah ? "text-red" : "text-blue"}`}
+            >{`${memberNameFormat(userDt["memberName"])}`}</span>
+          </p>
           {dtAllItem.length > 0 ? (
             <>
               <div
                 ref={scrollRef} // Assign ref to this div
                 className={`${
                   isLandscape
-                    ? "overflow-x-auto max-w-[100%] max-h-[450px]"
-                    : "overflow-y-auto max-h-[1150px]"
+                    ? "overflow-y-auto max-h-[402px]"
+                    : "overflow-y-auto max-h-[1102px]"
                 }`}
               >
                 {dtAllItem.map((item, itemIndex) => (

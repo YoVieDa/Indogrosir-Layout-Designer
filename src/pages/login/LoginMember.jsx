@@ -84,7 +84,6 @@ function LoginMember() {
   const glNamaModul = useSelector((state) => state.glUser.namaModul);
   let glRegistryDt;
   let lcLogOutLimitApp = 40;
-  const shiftState = useSelector((state) => state.glRegistry.shiftState);
   const [isPortrait, setIsPortrait] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
   const glDtRegistry = useSelector(
@@ -92,6 +91,8 @@ function LoginMember() {
   );
   const navigate = useNavigate();
   const appVersion = packageJson.version;
+
+  let shiftStateRef = useRef(false);
 
   let ipModulRef = useRef("");
 
@@ -294,11 +295,13 @@ function LoginMember() {
         if (response["data"]["status"] === 0) {
           setOpenModalAlert(true);
           dispatch(setGlDtShift(true));
+          shiftStateRef.current = true;
 
           setMsg("Berhasil Open Shift");
           setResSuccess(true);
         } else if (response["data"]["status"] === 1) {
           dispatch(setGlDtShift(true));
+          shiftStateRef.current = true;
         }
       })
       .catch(function (error) {
@@ -308,8 +311,10 @@ function LoginMember() {
         } else {
           setOpenModalAlert(true);
           dispatch(setGlDtShift(false));
-
-          setMsg(error["response"]["data"]["status"]);
+          shiftStateRef.current = false;
+          setMsg(
+            "Gagal terhubung dengan service, Silahkan hubungi karyawan Indogrosir terdekat"
+          );
         }
         setLoading(false);
       });
@@ -616,6 +621,7 @@ function LoginMember() {
               if (doPrintReceiptClosing?.status) {
                 setOpenModalClosing(false);
                 dispatch(setGlDtShift(false));
+                shiftStateRef.current = false;
                 dispatch(setFlagClosing(true));
                 setOpenModalAlert(true);
                 setResSuccess(true);
@@ -786,64 +792,73 @@ function LoginMember() {
 
   const handleButtonMemberUmum = async () => {
     setLoading(true);
-    await getIpAddress();
+    console.log("shift: ", shiftStateRef);
+    if (shiftStateRef.current) {
+      await getIpAddress();
 
-    await axios
-      .post(
-        `${URL_GATEWAY}/login/loginFreePass`,
-        {
-          kodeIGR: registrySS["registryOraIGR"],
-          dbStatus: registrySS["server"],
-          dtIpModul: ipModulRef.current,
-          dtStationModul: glStationModul,
-        },
-        {
-          headers: {
-            server: registrySS["server"],
-            registryOraIGR: registrySS["registryOraIGR"],
-            registryIp: registrySS["registryOraIP"],
-            registryPort: registrySS["registryPort"],
-            registryServiceName: registrySS["registryServiceName"],
-            registryUser: registrySS["registryUser"],
-            registryPwd: registrySS["registryPwd"],
-            "Cache-Control": "no-cache",
-            "x-api-key": LOGIN_KEY,
+      await axios
+        .post(
+          `${URL_GATEWAY}/login/loginFreePass`,
+          {
+            kodeIGR: registrySS["registryOraIGR"],
+            dbStatus: registrySS["server"],
+            dtIpModul: ipModulRef.current,
+            dtStationModul: glStationModul,
           },
-        }
-      )
-      .then((response) => {
-        if (response["data"]["data"]["memberFlag"] === "Y") {
-          dispatch(setGlDataUser(response["data"]["data"]));
-          dispatch(setFlagMemberUmum(true));
-          navigate("/kasirSelfService");
-        } else {
-          handleToggleMember();
-          dispatch(setFlagMemberUmum(true));
-          dispatch(setGlDataUser(response["data"]["data"]));
-          navigate("/kasirSelfService");
-        }
-        setLoading(false);
-      })
-      .catch(async (error) => {
-        if (error.message === "Network Error") {
-          setMsg("Gagal Terhubung Dengan Gateway");
-        } else {
-          setMsg(error["response"]?.["data"]?.["status"]);
-        }
+          {
+            headers: {
+              server: registrySS["server"],
+              registryOraIGR: registrySS["registryOraIGR"],
+              registryIp: registrySS["registryOraIP"],
+              registryPort: registrySS["registryPort"],
+              registryServiceName: registrySS["registryServiceName"],
+              registryUser: registrySS["registryUser"],
+              registryPwd: registrySS["registryPwd"],
+              "Cache-Control": "no-cache",
+              "x-api-key": LOGIN_KEY,
+            },
+          }
+        )
+        .then((response) => {
+          if (response["data"]["data"]["memberFlag"] === "Y") {
+            dispatch(setGlDataUser(response["data"]["data"]));
+            dispatch(setFlagMemberUmum(true));
+            navigate("/kasirSelfService");
+          } else {
+            handleToggleMember();
+            dispatch(setFlagMemberUmum(true));
+            dispatch(setGlDataUser(response["data"]["data"]));
+            navigate("/kasirSelfService");
+          }
+          setLoading(false);
+        })
+        .catch(async (error) => {
+          if (error.message === "Network Error") {
+            setMsg("Gagal Terhubung Dengan Gateway");
+          } else {
+            setMsg(error["response"]?.["data"]?.["status"]);
+          }
 
-        await errorLog(error.message);
-        await sendErrorLogWithAPI(
-          error.message,
-          glDtRegistry,
-          URL_GATEWAY,
-          glStationModul,
-          appVersion
-        );
+          await errorLog(error.message);
+          await sendErrorLogWithAPI(
+            error.message,
+            glDtRegistry,
+            URL_GATEWAY,
+            glStationModul,
+            appVersion
+          );
 
-        setOpenModalAlert(true);
+          setOpenModalAlert(true);
 
-        setLoading(false);
-      });
+          setLoading(false);
+        });
+    } else {
+      setMsg(
+        "Tidak dapat masuk transaksi\nSilahkan hubungi karyawan Indogrosir terdekat"
+      );
+      setOpenModalAlert(true);
+      setLoading(false);
+    }
   };
   return (
     <>
@@ -1004,7 +1019,9 @@ function LoginMember() {
               <img
                 src={IcArrowBot}
                 alt="Arrow Bottom"
-                className="mt-20 animate-bounce "
+                className={`mt-20 ${
+                  isLandscape ? "" : "ml-auto"
+                } animate-bounce `}
               />
             </div>
           </div>

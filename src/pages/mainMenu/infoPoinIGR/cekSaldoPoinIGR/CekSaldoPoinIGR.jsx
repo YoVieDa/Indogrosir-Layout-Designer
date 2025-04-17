@@ -401,7 +401,7 @@ function CekSaldoPoinIGR() {
             type: "text", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
             value: strukData,
             style: {
-              fontFamily: "Courier New, Courier, monospace", // Mengatur font ke Courier atau monospace lain
+              fontFamily: "Courier, monospace", // Mengatur font ke Courier atau monospace lain
               whiteSpace: "pre", // Menjaga spasi dan baris baru
               fontSize: "9.5px",
               fontWeight: "700",
