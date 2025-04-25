@@ -705,21 +705,21 @@ ipcMain.handle("print_receipt_belanja", async (event, arg) => {
   };
 
   const data = [
-    // {
-    //   type: "image", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
-    //   path: path.join(
-    //     __dirname,
-    //     "..",
-    //     "..",
-    //     "public",
-    //     "images",
-    //     "Header IGR",
-    //     `${arg.kodeIGR}.jpg`
-    //   ),
-    //   position: "left",
-    //   width: "250px",
-    //   height: "100px",
-    // },
+    {
+      type: "image", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
+      path: path.join(
+        __dirname,
+        "..",
+        "..",
+        "public",
+        "images",
+        "Header IGR",
+        `${arg.kodeIGR}.jpg`
+      ),
+      position: "left",
+      width: "250px",
+      height: "100px",
+    },
     {
       type: "text", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
       value: arg.strukData,
