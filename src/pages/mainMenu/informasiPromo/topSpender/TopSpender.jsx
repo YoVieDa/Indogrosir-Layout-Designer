@@ -16,7 +16,6 @@ import { useNavigate } from "react-router-dom";
 import { setGlDtTopSpender } from "../../../../services/redux/topSpenderReducer";
 import { AESEncrypt, INFO_PROMO_KEY, URL_GATEWAY } from "../../../../config";
 import { toggleMemberMerah } from "../../../../services/redux/memberReducer";
-import { deleteTempMemberFromAPI } from "../../../../controller/kasirPembayaranController";
 
 const dataDummy = [
   {
@@ -58,35 +57,13 @@ function TopSpender() {
   const handleNavigate = async () => {
     setLoading(true);
 
-    const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
-      URL_GATEWAY,
-      userDt["memberID"],
-      glIpModul,
-      glStationModul,
-      glRegistryDt
-    );
-
-    if (doDeleteTempMemberFromAPI.status === true) {
-      if (memberMerah) {
-        setLoading(false);
-        navigate("/");
-      } else {
-        setLoading(false);
-        navigate("/");
-        dispatch(toggleMemberMerah());
-      }
-    } else {
-      // if (
-      //   doDeleteTempMemberFromAPI.message ===
-      //   "Network doDeleteTempMemberFromAPI"
-      // ) {
-      //   setAlertMsg("Gagal Terhubung Dengan Gateway");
-      // } else {
-      //   setAlertMsg(doDeleteTempMemberFromAPI.message);
-      // }
-
+    if (memberMerah) {
       setLoading(false);
-      // setOpenModalAlert(true);
+      navigate("/");
+    } else {
+      setLoading(false);
+      navigate("/");
+      dispatch(toggleMemberMerah());
     }
   };
 

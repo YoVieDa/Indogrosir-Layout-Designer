@@ -25,7 +25,6 @@ import {
   removeAllItemsHitungTotal,
 } from "../../../../services/redux/dtAllInputtedItemReducer";
 import { addDtTimeStart } from "../../../../services/redux/documentInfoReducer";
-import { deleteTempMemberFromAPI } from "../../../../controller/kasirPembayaranController";
 
 // const struk = {
 //   provider: "TELKOMSEL",
@@ -79,39 +78,18 @@ function Pembayaran() {
 
   const handleNavigate = async () => {
     setLoading(true);
-    const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
-      URL_GATEWAY,
-      userDt["memberID"],
-      glIpModul,
-      glStationModul,
-      glRegistryDt
-    );
 
-    if (doDeleteTempMemberFromAPI.status === true) {
-      if (memberMerah) {
-        navigate("/");
-        dispatch(addDtTimeStart(""));
-        dispatch(removeAllItems());
-        dispatch(removeAllItemsHitungTotal());
-      } else {
-        navigate("/");
-        dispatch(addDtTimeStart(""));
-        dispatch(removeAllItems());
-        dispatch(toggleMemberMerah());
-        dispatch(removeAllItemsHitungTotal());
-      }
+    if (memberMerah) {
+      navigate("/");
+      dispatch(addDtTimeStart(""));
+      dispatch(removeAllItems());
+      dispatch(removeAllItemsHitungTotal());
     } else {
-      if (
-        doDeleteTempMemberFromAPI.message ===
-        "Network doDeleteTempMemberFromAPI"
-      ) {
-        setErrMsg("Gagal Terhubung Dengan Gateway");
-      } else {
-        setErrMsg(doDeleteTempMemberFromAPI.message);
-      }
-
-      setLoading(false);
-      setOpenModalAlertErr(true);
+      navigate("/");
+      dispatch(addDtTimeStart(""));
+      dispatch(removeAllItems());
+      dispatch(toggleMemberMerah());
+      dispatch(removeAllItemsHitungTotal());
     }
   };
 

@@ -9,10 +9,15 @@ function MenuBtn({
   rounded,
   roundedBot,
   disabled,
+  onMenuClickProp,
 }) {
   const navigate = useNavigate();
-  const handleNavigate = () => {
-    navigate(path);
+  const handleNavigate = async () => {
+    if (title === "Belanja" && onMenuClickProp) {
+      await onMenuClickProp();
+    } else {
+      navigate(path);
+    }
   };
   return (
     <button
@@ -30,15 +35,6 @@ function MenuBtn({
       <img src={icon} alt="Button" className="self-center" />
       <span className="text-[30px]">{title}</span>
     </button>
-
-    /* <button
-      className="flex flex-row w-[40vh] items-center rounded-xl bg-stroke bg-white p-5 gap-4 text-subText font-bold text-black transition duration-200 active:bg-gray-100"
-      style={{ height: `${longest * 7}px` }}
-      onClick={handleNavigate}
-    >
-      <img src={icon} alt="Button" />
-      <span className="flex-1">{title}</span>
-    </button> */
   );
 }
 

@@ -43,17 +43,17 @@ function StandardBtn({
   const memberMerah = useSelector((state) => state.memberState.memberMerah);
   const handleNavigate = async () => {
     if (pos) {
-      if (memberUmum === true) {
-        setLoading(true);
-        const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
-          URL_GATEWAY,
-          userDt["memberID"],
-          glIpModul,
-          glStationModul,
-          glRegistryDt
-        );
+      setLoading(true);
+      const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
+        URL_GATEWAY,
+        userDt["memberID"],
+        glIpModul,
+        glStationModul,
+        glRegistryDt
+      );
 
-        if (doDeleteTempMemberFromAPI.status === true) {
+      if (doDeleteTempMemberFromAPI.status === true) {
+        if (memberUmum) {
           if (memberMerah) {
             setLoading(false);
             dispatch(addDtTimeStart(""));
@@ -67,22 +67,22 @@ function StandardBtn({
             dispatch(toggleMemberMerah());
           }
         } else {
-          if (
-            doDeleteTempMemberFromAPI.message ===
-            "Network doDeleteTempMemberFromAPI"
-          ) {
-            setMsg("Gagal Terhubung Dengan Gateway");
-          } else {
-            setMsg(doDeleteTempMemberFromAPI.message);
-          }
-
-          setLoading(false);
-          setOpenModalAlert(true);
+          dispatch(addDtTimeStart(""));
+          dispatch(removeAllItems());
+          navigate(path);
         }
       } else {
-        dispatch(addDtTimeStart(""));
-        dispatch(removeAllItems());
-        navigate(path);
+        if (
+          doDeleteTempMemberFromAPI.message ===
+          "Network doDeleteTempMemberFromAPI"
+        ) {
+          setMsg("Gagal Terhubung Dengan Gateway");
+        } else {
+          setMsg(doDeleteTempMemberFromAPI.message);
+        }
+
+        setLoading(false);
+        setOpenModalAlert(true);
       }
     } else if (pembayaran) {
       navigate(path);

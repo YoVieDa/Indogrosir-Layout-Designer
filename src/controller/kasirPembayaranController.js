@@ -124,3 +124,91 @@ export const deleteTempMemberFromAPI = async (
 };
 
 export const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const checkDoubleStationFromAPI = async (
+  urlGW,
+  kodeMember,
+  glRegistryDt
+) => {
+  try {
+    return axios
+      .post(
+        `${urlGW}/login/checkDoubleStation`,
+        {
+          memberId: kodeMember,
+        },
+        {
+          headers: {
+            server: glRegistryDt["glRegistryDt"]["server"],
+            registryOraIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
+            registryIp: glRegistryDt["glRegistryDt"]["registryOraIP"],
+            registryPort: glRegistryDt["glRegistryDt"]["registryPort"],
+            registryServiceName:
+              glRegistryDt["glRegistryDt"]["registryServiceName"],
+            registryUser: glRegistryDt["glRegistryDt"]["registryUser"],
+            registryPwd: glRegistryDt["glRegistryDt"]["registryPwd"],
+            "Cache-Control": "no-cache",
+            "x-api-key": LOGIN_KEY,
+          },
+        }
+      )
+      .then(async (response) => {
+        return true;
+      })
+      .catch((error) => {
+        if (error.message === "Network doCheckDoubleStationFromAPI") {
+          throw new Error(error.message);
+        } else {
+          throw new Error(error["response"]?.["data"]?.["status"]);
+        }
+      });
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
+export const insertTempMemberFromAPI = async (
+  urlGW,
+  kodeMember,
+  ipModul,
+  stationModul,
+  glRegistryDt
+) => {
+  try {
+    return axios
+      .post(
+        `${urlGW}/login/insertTempMemberKasir`,
+        {
+          memberId: kodeMember,
+          dtStationModul: stationModul,
+          dtIpModul: ipModul,
+        },
+        {
+          headers: {
+            server: glRegistryDt["glRegistryDt"]["server"],
+            registryOraIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
+            registryIp: glRegistryDt["glRegistryDt"]["registryOraIP"],
+            registryPort: glRegistryDt["glRegistryDt"]["registryPort"],
+            registryServiceName:
+              glRegistryDt["glRegistryDt"]["registryServiceName"],
+            registryUser: glRegistryDt["glRegistryDt"]["registryUser"],
+            registryPwd: glRegistryDt["glRegistryDt"]["registryPwd"],
+            "Cache-Control": "no-cache",
+            "x-api-key": LOGIN_KEY,
+          },
+        }
+      )
+      .then(async (response) => {
+        return { status: true, message: "Berhasil insert temp member" };
+      })
+      .catch((error) => {
+        if (error.message === "Network doInsertTempMemberFromAPI") {
+          throw new Error(error.message);
+        } else {
+          throw new Error(error["response"]?.["data"]?.["status"]);
+        }
+      });
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};

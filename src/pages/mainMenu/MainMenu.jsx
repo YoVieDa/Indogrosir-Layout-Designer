@@ -26,7 +26,6 @@ import axios from "axios";
 import { AESEncrypt, LOGIN_KEY, PAYMENT_KEY } from "../../config";
 import Loader from "../../components/Loader";
 import ModalAlert from "../../components/ModalAlert";
-import { deleteTempMemberFromAPI } from "../../controller/kasirPembayaranController";
 const mainMenuBtnMerah = [
   {
     icon: IcInfoPoinMM,
@@ -97,35 +96,14 @@ function MainMenu() {
 
   const handleNavigate = async () => {
     setLoading(true);
-    const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
-      URL_GATEWAY,
-      userDt["memberID"],
-      glIpModul,
-      glStationModul,
-      glRegistryDt
-    );
 
-    if (doDeleteTempMemberFromAPI.status === true) {
-      if (memberMerah) {
-        setLoading(false);
-        navigate("/");
-      } else {
-        setLoading(false);
-        navigate("/");
-        dispatch(toggleMemberMerah());
-      }
-    } else {
-      if (
-        doDeleteTempMemberFromAPI.message ===
-        "Network doDeleteTempMemberFromAPI"
-      ) {
-        setMsg("Gagal Terhubung Dengan Gateway");
-      } else {
-        setMsg(doDeleteTempMemberFromAPI.message);
-      }
-
+    if (memberMerah) {
       setLoading(false);
-      setOpenModalAlert(true);
+      navigate("/");
+    } else {
+      setLoading(false);
+      navigate("/");
+      dispatch(toggleMemberMerah());
     }
   };
 

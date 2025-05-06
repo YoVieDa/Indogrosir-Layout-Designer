@@ -79,7 +79,7 @@ function HiddenInput({ closingState, logoutState }) {
       let memberId = inputValue;
       memberId = memberId.split("#").join("").toUpperCase();
 
-      if (scanDuration > 100 && !memberId.startsWith("MANUAL")) {
+      if (scanDuration > 500 && !memberId.startsWith("MANUAL")) {
         if (memberId === "LOGOUT" || memberId === "logout") {
           setInputValue("");
           logoutState();

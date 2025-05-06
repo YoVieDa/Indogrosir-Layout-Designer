@@ -32,7 +32,6 @@ import {
 } from "../../../../config";
 import { toggleMemberMerah } from "../../../../services/redux/memberReducer";
 import {
-  deleteTempMemberFromAPI,
   errorLog,
   sendErrorLogWithAPI,
 } from "../../../../controller/kasirPembayaranController";
@@ -85,35 +84,13 @@ function CekSaldoPoinIGR() {
   const handleNavigateLogout = async () => {
     setLoading(true);
 
-    const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
-      URL_GATEWAY,
-      userDt["memberID"],
-      glIpModul,
-      glStationModul,
-      glRegistryDt
-    );
-
-    if (doDeleteTempMemberFromAPI.status === true) {
-      if (memberMerah) {
-        setLoading(false);
-        navigate("/");
-      } else {
-        setLoading(false);
-        navigate("/");
-        dispatch(toggleMemberMerah());
-      }
-    } else {
-      if (
-        doDeleteTempMemberFromAPI.message ===
-        "Network doDeleteTempMemberFromAPI"
-      ) {
-        setAlertMsg("Gagal Terhubung Dengan Gateway");
-      } else {
-        setAlertMsg(doDeleteTempMemberFromAPI.message);
-      }
-
+    if (memberMerah) {
       setLoading(false);
-      setOpenModalAlert(true);
+      navigate("/");
+    } else {
+      setLoading(false);
+      navigate("/");
+      dispatch(toggleMemberMerah());
     }
   };
 

@@ -18,7 +18,6 @@ import axios from "axios";
 import { AESEncrypt, PROMO_LAIN_KEY, URL_GATEWAY } from "../../../../config";
 import { toggleMemberMerah } from "../../../../services/redux/memberReducer";
 import { useNavigate } from "react-router-dom";
-import { deleteTempMemberFromAPI } from "../../../../controller/kasirPembayaranController";
 
 const dataDummy = [
   {
@@ -57,35 +56,13 @@ function DiscountMerchant() {
   const handleNavigate = async () => {
     setLoading(true);
 
-    const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
-      URL_GATEWAY,
-      userDt["memberID"],
-      glIpModul,
-      glStationModul,
-      glRegistryDt
-    );
-
-    if (doDeleteTempMemberFromAPI.status === true) {
-      if (memberMerah) {
-        setLoading(false);
-        navigate("/");
-      } else {
-        setLoading(false);
-        navigate("/");
-        dispatch(toggleMemberMerah());
-      }
-    } else {
-      // if (
-      //   doDeleteTempMemberFromAPI.message ===
-      //   "Network doDeleteTempMemberFromAPI"
-      // ) {
-      //   setAlertMsg("Gagal Terhubung Dengan Gateway");
-      // } else {
-      //   setAlertMsg(doDeleteTempMemberFromAPI.message);
-      // }
-
+    if (memberMerah) {
       setLoading(false);
-      // setOpenModalAlert(true);
+      navigate("/");
+    } else {
+      setLoading(false);
+      navigate("/");
+      dispatch(toggleMemberMerah());
     }
   };
 

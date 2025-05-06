@@ -8,7 +8,7 @@ import MenuBtn from "./MenuBtn";
 import { Pagination } from "swiper/modules";
 import { useSelector } from "react-redux";
 
-function SwiperComponent({ data, data2, isLandscape }) {
+function SwiperComponent({ data, data2, isLandscape, onMenuComponentProp }) {
   const longestText = Math.max(...data.map((text) => text.title.length));
   const landscape = useSelector((state) => state.glDtOrientation.dtLandscape);
   const shiftState = useSelector((state) => state.glRegistry.shiftState);
@@ -67,6 +67,7 @@ function SwiperComponent({ data, data2, isLandscape }) {
                 shiftState === false && item.title === "Belanja" ? true : false
               }
               className="mb-4"
+              onMenuClickProp={onMenuComponentProp}
             />
           ))}
         </div>
@@ -115,6 +116,7 @@ function SwiperComponent({ data, data2, isLandscape }) {
                     : false
                 }
                 className="mb-4"
+                onMenuClickProp={onMenuComponentProp}
               />
             ))}
           </div>
