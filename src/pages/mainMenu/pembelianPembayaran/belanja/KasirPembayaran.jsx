@@ -199,7 +199,7 @@ function KasirPembayaran() {
       const setNewTimeout = () => {
         newTimeoutId = setTimeout(async () => {
           await handleNavigate();
-        }, 120 * 1000);
+        }, 60 * 1000);
       };
 
       setNewTimeout();
