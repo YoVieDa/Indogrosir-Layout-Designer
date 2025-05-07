@@ -192,7 +192,7 @@ function KasirPembayaran() {
 
       const handleTouch = () => {
         clearTimeout(newTimeoutId);
-        console.log("delayInMilliseconds", 120 * 1000);
+        console.log("delayInMilliseconds", 60 * 1000);
         setNewTimeout();
       };
 
