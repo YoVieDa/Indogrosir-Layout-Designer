@@ -50,17 +50,17 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   }
 
-  // // Menonaktifkan DevTools
-  // mainWindow.webContents.on("devtools-opened", () => {
-  //   mainWindow.webContents.closeDevTools();
-  // });
+  // Menonaktifkan DevTools
+  mainWindow.webContents.on("devtools-opened", () => {
+    mainWindow.webContents.closeDevTools();
+  });
 
-  // // Menonaktifkan shortcut untuk membuka DevTools
-  // app.whenReady().then(() => {
-  //   globalShortcut.register("Control+Shift+I", () => {
-  //     // menonaktifkan aksi dari shortcut
-  //   });
-  // });
+  // Menonaktifkan shortcut untuk membuka DevTools
+  app.whenReady().then(() => {
+    globalShortcut.register("Control+Shift+I", () => {
+      // menonaktifkan aksi dari shortcut
+    });
+  });
 }
 
 app.whenReady().then(() => {

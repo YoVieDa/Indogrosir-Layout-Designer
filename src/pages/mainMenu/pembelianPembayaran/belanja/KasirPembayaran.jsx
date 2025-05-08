@@ -148,41 +148,45 @@ function KasirPembayaran() {
 
   const handleNavigate = async () => {
     setLoading(true);
-    const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
-      URL_GATEWAY,
-      userDt["memberID"],
-      glIpModul,
-      glStationModul,
-      glRegistryDt
-    );
+    try {
+      const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
+        URL_GATEWAY,
+        userDt["memberID"],
+        glIpModul,
+        glStationModul,
+        glRegistryDt
+      );
 
-    if (doDeleteTempMemberFromAPI.status === true) {
-      if (memberMerah) {
-        navigate("/");
-        dispatch(addDtTimeStart(""));
-        dispatch(removeAllItems());
-        setOpenModalAlert(false);
-        setOpenModalPayment(false);
-      } else {
-        navigate("/");
-        dispatch(addDtTimeStart(""));
-        dispatch(removeAllItems());
-        setOpenModalAlert(false);
-        setOpenModalPayment(false);
-        dispatch(toggleMemberMerah());
-      }
-    } else {
-      if (
-        doDeleteTempMemberFromAPI.message ===
-        "Network doDeleteTempMemberFromAPI"
-      ) {
-        setMsg("Gagal Terhubung Dengan Gateway");
-      } else {
-        setMsg(doDeleteTempMemberFromAPI.message);
+      if (doDeleteTempMemberFromAPI) {
+        if (memberMerah) {
+          navigate("/");
+          dispatch(addDtTimeStart(""));
+          dispatch(removeAllItems());
+          setOpenModalAlert(false);
+          setOpenModalPayment(false);
+        } else {
+          navigate("/");
+          dispatch(addDtTimeStart(""));
+          dispatch(removeAllItems());
+          setOpenModalAlert(false);
+          setOpenModalPayment(false);
+          dispatch(toggleMemberMerah());
+        }
       }
 
       setLoading(false);
+    } catch (error) {
+      await errorLog(error.message);
+      await sendErrorLogWithAPI(
+        error.message,
+        glRegistryDt,
+        URL_GATEWAY,
+        glStationModul,
+        appVersion
+      );
+      setMsg(error.message);
       setOpenModalAlert(true);
+      setLoading(false);
     }
   };
 

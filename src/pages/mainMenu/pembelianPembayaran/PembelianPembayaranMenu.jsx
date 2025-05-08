@@ -20,8 +20,11 @@ import Loader from "../../../components/Loader";
 import ModalAlert from "../../../components/ModalAlert";
 import {
   checkDoubleStationFromAPI,
+  errorLog,
   insertTempMemberFromAPI,
+  sendErrorLogWithAPI,
 } from "../../../controller/kasirPembayaranController";
+import packageJson from "../../../../package.json";
 
 const menuBtnMemberMerah = [
   // {
@@ -57,6 +60,7 @@ function PembelianPembayaranMenu() {
   const glRegistryDt = useSelector(
     (state) => state.glRegistry.dtDecryptedRegistry
   );
+  const appVersion = packageJson.version;
 
   const glStationModul = useSelector((state) => state.glUser.stationModul);
   const glIpModul = useSelector((state) => state.glDtIp.dtIp);
@@ -128,15 +132,15 @@ function PembelianPembayaranMenu() {
         glRegistryDt
       );
 
-      const doInsertTempMemberFromAPI = await insertTempMemberFromAPI(
-        URL_GATEWAY,
-        userDt["memberID"],
-        glIpModul,
-        glStationModul,
-        glRegistryDt
-      );
-
       if (doCheckDoubleStation) {
+        const doInsertTempMemberFromAPI = await insertTempMemberFromAPI(
+          URL_GATEWAY,
+          userDt["memberID"],
+          glIpModul,
+          glStationModul,
+          glRegistryDt
+        );
+
         if (doInsertTempMemberFromAPI) {
           navigate("/kasirSelfService");
         } else {
@@ -146,6 +150,16 @@ function PembelianPembayaranMenu() {
         navigate("/pembelianPembayaranMenu");
       }
     } catch (error) {
+      if (error.message !== "Member sedang login di station lain") {
+        await errorLog(error.message);
+        await sendErrorLogWithAPI(
+          error.message,
+          glRegistryDt,
+          URL_GATEWAY,
+          glStationModul,
+          appVersion
+        );
+      }
       setMsg(error.message);
       setOpenModalAlert(true);
     } finally {

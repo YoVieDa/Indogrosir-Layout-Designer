@@ -103,23 +103,17 @@ export const deleteTempMemberFromAPI = async (
         }
       )
       .then(async (response) => {
-        return { status: true, message: "Berhasil delete temp member" };
+        return true;
       })
       .catch((error) => {
-        if (error.message === "Network doDeleteTempMemberFromAPI") {
-          return { status: false, message: error.message };
+        if (error["response"]?.["data"]?.["status"]) {
+          throw new Error(error["response"]?.["data"]?.["status"]);
         } else {
-          return {
-            status: false,
-            message: error["response"]?.["data"]?.["status"],
-          };
+          throw new Error(error.message);
         }
       });
   } catch (error) {
-    return {
-      status: false,
-      message: error.message,
-    };
+    throw new Error(error.message);
   }
 };
 
@@ -156,10 +150,10 @@ export const checkDoubleStationFromAPI = async (
         return true;
       })
       .catch((error) => {
-        if (error.message === "Network doCheckDoubleStationFromAPI") {
-          throw new Error(error.message);
-        } else {
+        if (error["response"]?.["data"]?.["status"]) {
           throw new Error(error["response"]?.["data"]?.["status"]);
+        } else {
+          throw new Error(error.message);
         }
       });
   } catch (error) {
@@ -199,13 +193,13 @@ export const insertTempMemberFromAPI = async (
         }
       )
       .then(async (response) => {
-        return { status: true, message: "Berhasil insert temp member" };
+        return true;
       })
       .catch((error) => {
-        if (error.message === "Network doInsertTempMemberFromAPI") {
-          throw new Error(error.message);
-        } else {
+        if (error["response"]?.["data"]?.["status"]) {
           throw new Error(error["response"]?.["data"]?.["status"]);
+        } else {
+          throw new Error(error.message);
         }
       });
   } catch (error) {

@@ -12,11 +12,16 @@ import {
   removeDtTimeStart,
 } from "../services/redux/documentInfoReducer";
 import Loader from "./Loader";
-import { deleteTempMemberFromAPI } from "../controller/kasirPembayaranController";
+import {
+  deleteTempMemberFromAPI,
+  errorLog,
+  sendErrorLogWithAPI,
+} from "../controller/kasirPembayaranController";
 import { AESEncrypt } from "../config";
 import { toggleMemberMerah } from "../services/redux/memberReducer";
 import ModalAlert from "./ModalAlert";
 import { IcErr } from "../assets";
+import packageJson from "../../package.json";
 
 function StandardBtn({
   title,
@@ -40,55 +45,59 @@ function StandardBtn({
   const glRegistryDt = useSelector(
     (state) => state.glRegistry.dtDecryptedRegistry
   );
+  const appVersion = packageJson.version;
   const memberMerah = useSelector((state) => state.memberState.memberMerah);
   const handleNavigate = async () => {
-    if (pos) {
-      setLoading(true);
-      const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
-        URL_GATEWAY,
-        userDt["memberID"],
-        glIpModul,
-        glStationModul,
-        glRegistryDt
-      );
+    setLoading(true);
+    try {
+      if (pos) {
+        const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
+          URL_GATEWAY,
+          userDt["memberID"],
+          glIpModul,
+          glStationModul,
+          glRegistryDt
+        );
 
-      if (doDeleteTempMemberFromAPI.status === true) {
-        if (memberUmum) {
-          if (memberMerah) {
-            setLoading(false);
-            dispatch(addDtTimeStart(""));
-            dispatch(removeAllItems());
-            navigate("/");
+        if (doDeleteTempMemberFromAPI) {
+          if (memberUmum) {
+            if (memberMerah) {
+              setLoading(false);
+              dispatch(addDtTimeStart(""));
+              dispatch(removeAllItems());
+              navigate("/");
+            } else {
+              setLoading(false);
+              dispatch(addDtTimeStart(""));
+              dispatch(removeAllItems());
+              navigate("/");
+              dispatch(toggleMemberMerah());
+            }
           } else {
-            setLoading(false);
             dispatch(addDtTimeStart(""));
             dispatch(removeAllItems());
-            navigate("/");
-            dispatch(toggleMemberMerah());
+            navigate(path);
           }
-        } else {
-          dispatch(addDtTimeStart(""));
-          dispatch(removeAllItems());
-          navigate(path);
         }
-      } else {
-        if (
-          doDeleteTempMemberFromAPI.message ===
-          "Network doDeleteTempMemberFromAPI"
-        ) {
-          setMsg("Gagal Terhubung Dengan Gateway");
-        } else {
-          setMsg(doDeleteTempMemberFromAPI.message);
-        }
-
         setLoading(false);
-        setOpenModalAlert(true);
+      } else if (pembayaran) {
+        navigate(path);
+        dispatch(removeAllItemsHitungTotal());
+      } else {
+        navigate(path);
       }
-    } else if (pembayaran) {
-      navigate(path);
-      dispatch(removeAllItemsHitungTotal());
-    } else {
-      navigate(path);
+    } catch (error) {
+      await errorLog(error.message);
+      await sendErrorLogWithAPI(
+        error.message,
+        glRegistryDt,
+        URL_GATEWAY,
+        glStationModul,
+        appVersion
+      );
+      setMsg(error.message);
+      setOpenModalAlert(true);
+      setLoading(false);
     }
   };
 
