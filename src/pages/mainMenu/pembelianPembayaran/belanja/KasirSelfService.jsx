@@ -31,6 +31,7 @@ import {
   addItemDtPwp,
   setGlPembulatan,
 } from "../../../../services/redux/dtForPwpReducer";
+import { delay } from "../../../../controller/kasirPembayaranController";
 
 function KasirSelfService() {
   const dispatch = useDispatch();
@@ -59,7 +60,7 @@ function KasirSelfService() {
   const glUserModul = useSelector((state) => state.glUser.userModul);
   const glStationModul = useSelector((state) => state.glUser.stationModul);
   const glLougoutApp = useSelector((state) => state.glCounter.glLogOutLimitApp);
-
+  let startShoppingTimeout = useRef(false);
   const countTotal = () => {
     let totalTemp = 0;
     let pembulatanTemp;
@@ -83,6 +84,12 @@ function KasirSelfService() {
     setTotal(totalTemp);
     setPembulatan(pembulatanTemp);
     console.log("pembulatan", pembulatanTemp);
+  };
+
+  const navigateStartShoppingTimeout = () => {
+    dispatch(addDtTimeStart(""));
+    dispatch(removeAllItems());
+    navigate("/pembelianPembayaranMenu");
   };
 
   useEffect(() => {
@@ -114,6 +121,7 @@ function KasirSelfService() {
               "Cache-Control": "no-cache",
               "x-api-key": PAYMENT_KEY,
             },
+            timeout: 10000,
           }
         )
         .then((response) => {
@@ -124,9 +132,15 @@ function KasirSelfService() {
         })
         .catch(function (error) {
           console.log(error);
+          if (error?.code === "ECONNABORTED") {
+            setMsg(
+              "Maaf, sistem kami sedang lambat saat ini. Silahkan coba lagi"
+            );
+            startShoppingTimeout.current = true;
+            setOpenModalAlert(true);
+          }
 
           setLoading(false);
-          setOpenModalAlert(true);
         });
     };
 
@@ -254,6 +268,7 @@ function KasirSelfService() {
             "Cache-Control": "no-cache",
             "x-api-key": PAYMENT_KEY,
           },
+          timeout: 30000,
         }
       )
       .then((response) => {
@@ -276,9 +291,31 @@ function KasirSelfService() {
       .catch(function (error) {
         console.log(error);
 
-        setMsg(error["response"]["data"]["status"]);
-        setLoading(false);
-        setOpenModalAlert(true);
+        if (error?.code === "ECONNABORTED") {
+          setMsg(
+            "Maaf, sistem kami sedang lambat saat ini. Silahkan coba lagi"
+          );
+          setLoading(false);
+          setOpenModalAlert(true);
+        } else if (error?.["response"]?.["data"]?.["status"]) {
+          const statusCode = error?.response?.status;
+          if (statusCode === 500) {
+            setMsg(error["response"]["data"]["status"]);
+
+            setLoading(false);
+            setOpenModalAlert(true);
+          } else {
+            setMsg(error["response"]["data"]["status"]);
+
+            setLoading(false);
+            setOpenModalAlert(true);
+            setAlertInfo(true);
+          }
+        } else {
+          setMsg(error?.message);
+          setLoading(false);
+          setOpenModalAlert(true);
+        }
       });
   };
 
@@ -339,6 +376,7 @@ function KasirSelfService() {
               "Cache-Control": "no-cache",
               "x-api-key": PAYMENT_KEY,
             },
+            timeout: 120000,
           }
         )
         .then((response) => {
@@ -365,17 +403,31 @@ function KasirSelfService() {
         })
         .catch(function (error) {
           console.log(error);
-          const statusCode = error?.response?.status;
 
-          if (statusCode === 500) {
-            setMsg(error["response"]["data"]["status"]);
+          if (error?.code === "ECONNABORTED") {
+            setMsg(
+              "Maaf, sistem kami sedang lambat saat ini. Silahkan coba lagi"
+            );
             setLoading(false);
             setOpenModalAlert(true);
+          } else if (error?.["response"]?.["data"]?.["status"]) {
+            const statusCode = error?.response?.status;
+            if (statusCode === 500) {
+              setMsg(error["response"]["data"]["status"]);
+
+              setLoading(false);
+              setOpenModalAlert(true);
+            } else {
+              setMsg(error["response"]["data"]["status"]);
+
+              setLoading(false);
+              setOpenModalAlert(true);
+              setAlertInfo(true);
+            }
           } else {
-            setMsg(error["response"]["data"]["status"]);
+            setMsg(error?.message);
             setLoading(false);
             setOpenModalAlert(true);
-            setAlertInfo(true);
           }
         });
     }
@@ -423,6 +475,9 @@ function KasirSelfService() {
         onClose={() => {
           setOpenModalAlert(false);
           setAlertInfo(false);
+          if (startShoppingTimeout.current) {
+            navigateStartShoppingTimeout();
+          }
         }}
       >
         <div className="text-center">

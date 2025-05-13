@@ -51,34 +51,34 @@ function StandardBtn({
     setLoading(true);
     try {
       if (pos) {
-        const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
-          URL_GATEWAY,
-          userDt["memberID"],
-          glIpModul,
-          glStationModul,
-          glRegistryDt
-        );
+        if (memberMerah) {
+          const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
+            URL_GATEWAY,
+            userDt["memberID"],
+            glIpModul,
+            glStationModul,
+            glRegistryDt
+          );
 
-        if (doDeleteTempMemberFromAPI) {
+          if (doDeleteTempMemberFromAPI) {
+            dispatch(addDtTimeStart(""));
+            dispatch(removeAllItems());
+            navigate(path);
+          }
+        } else {
           if (memberUmum) {
-            if (memberMerah) {
-              setLoading(false);
-              dispatch(addDtTimeStart(""));
-              dispatch(removeAllItems());
-              navigate("/");
-            } else {
-              setLoading(false);
-              dispatch(addDtTimeStart(""));
-              dispatch(removeAllItems());
-              navigate("/");
-              dispatch(toggleMemberMerah());
-            }
+            setLoading(false);
+            dispatch(addDtTimeStart(""));
+            dispatch(removeAllItems());
+            navigate("/");
+            dispatch(toggleMemberMerah());
           } else {
             dispatch(addDtTimeStart(""));
             dispatch(removeAllItems());
             navigate(path);
           }
         }
+
         setLoading(false);
       } else if (pembayaran) {
         navigate(path);

@@ -222,7 +222,7 @@ function PembelianPembayaranMenu() {
           <SwiperComponent
             data={memberMerah ? menuBtnMemberMerah : menuBtnMemberBiru}
             isLandscape={isLandscape}
-            onMenuComponentProp={handleMenuClick}
+            onMenuComponentProp={memberMerah ? handleMenuClick : null}
           />
 
           <div className="self-end mt-auto">

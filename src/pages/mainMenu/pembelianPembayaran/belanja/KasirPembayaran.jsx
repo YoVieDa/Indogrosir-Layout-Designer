@@ -111,6 +111,8 @@ function KasirPembayaran() {
   const glLougoutApp = useSelector((state) => state.glCounter.glLogOutLimitApp);
   const glIpModul = useSelector((state) => state.glDtIp.dtIp);
   const appVersion = packageJson.version;
+  let flagErrorPrintReceipt = useRef(false);
+  let flagTimeoutDeleteTempMember = useRef(false);
 
   const generateDocCode = (noTransaksi) => {
     // Mengubah string menjadi angka, menambah 1, dan kemudian mengubah kembali menjadi string
@@ -149,29 +151,29 @@ function KasirPembayaran() {
   const handleNavigate = async () => {
     setLoading(true);
     try {
-      const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
-        URL_GATEWAY,
-        userDt["memberID"],
-        glIpModul,
-        glStationModul,
-        glRegistryDt
-      );
+      if (memberMerah) {
+        const doDeleteTempMemberFromAPI = await deleteTempMemberFromAPI(
+          URL_GATEWAY,
+          userDt["memberID"],
+          glIpModul,
+          glStationModul,
+          glRegistryDt
+        );
 
-      if (doDeleteTempMemberFromAPI) {
-        if (memberMerah) {
+        if (doDeleteTempMemberFromAPI) {
           navigate("/");
           dispatch(addDtTimeStart(""));
           dispatch(removeAllItems());
           setOpenModalAlert(false);
           setOpenModalPayment(false);
-        } else {
-          navigate("/");
-          dispatch(addDtTimeStart(""));
-          dispatch(removeAllItems());
-          setOpenModalAlert(false);
-          setOpenModalPayment(false);
-          dispatch(toggleMemberMerah());
         }
+      } else {
+        navigate("/");
+        dispatch(addDtTimeStart(""));
+        dispatch(removeAllItems());
+        setOpenModalAlert(false);
+        setOpenModalPayment(false);
+        dispatch(toggleMemberMerah());
       }
 
       setLoading(false);
@@ -185,6 +187,7 @@ function KasirPembayaran() {
         appVersion
       );
       setMsg(error.message);
+      flagTimeoutDeleteTempMember.current = true;
       setOpenModalAlert(true);
       setLoading(false);
     }
@@ -274,39 +277,42 @@ function KasirPembayaran() {
             "Cache-Control": "no-cache",
             "x-api-key": PAYMENT_KEY,
           },
+          timeout: 10000,
         }
       )
       .then((response) => {
-        console.log(response);
         dispatch(addDtInfo(response["data"]["noTrans"]));
         setLoading(false);
       })
       .catch(function (error) {
         console.log(error);
+        // if (error?.code === "ECONNABORTED") {
+        //   setMsg(
+        //     "Maaf, sistem kami sedang lambat saat ini. Silahkan coba lagi"
+        //   );
+        //   setLoading(false);
+        //   setOpenModalAlert(true);
+        // } else if (error?.["response"]?.["data"]?.["status"]) {
+        //   const statusCode = error?.response?.status;
+        //   if (statusCode === 500) {
+        //     setMsg(error["response"]["data"]["status"]);
+
+        //     setLoading(false);
+        //     setOpenModalAlert(true);
+        //   } else {
+        //     setMsg(error["response"]["data"]["status"]);
+
+        //     setLoading(false);
+        //     setOpenModalAlert(true);
+        //   }
+        // } else {
+        //   setMsg(error?.message);
+        //   setLoading(false);
+        //   setOpenModalAlert(true);
+        // }
 
         setLoading(false);
-        setOpenModalAlert(true);
       });
-  };
-
-  const getPic = async (namaFile) => {
-    try {
-      const response = await axios.get(
-        `${URL_SERVICE_PIC}/servicePic/getPic?kodeFile=` +
-          namaFile +
-          "&folderName=HEADER_IGR",
-        {
-          headers: {
-            "x-api-key": PIC_API_KEY,
-          },
-        }
-      );
-      console.log(response["data"]["imageUrl"]);
-      return response["data"]["imageUrl"]; // Mengembalikan hasil dengan benar
-    } catch (error) {
-      console.log(error.message);
-      return null; // Mengembalikan null atau nilai lain untuk menangani kesalahan
-    }
   };
 
   const handleEnterPress = async (e) => {
@@ -493,36 +499,6 @@ function KasirPembayaran() {
             };
 
             console.log("mulai print");
-            // await ipcRenderer
-            //       .invoke("print_receipt_belanja", dtToPrint)
-            //       .then(async (result) => {
-            //         setInputValue("");
-            //         dispatch(removeAllItems());
-            //         await getTimeStart();
-            //         setMsg(
-            //           "Terima kasih telah berbelanja di Indogrosir\nSilahkan tunjukkan struk ke area checker kami untuk proses verifikasi"
-            //         );
-
-            //         setAlertSucc(true);
-            //         setOpenModalAlert(true);
-            //         setLoading(false);
-
-            //         console.log("sudah print");
-            //       })
-            //       .catch(async (error) => {
-            //         await errorLog(error.message);
-            //         await sendErrorLogWithAPI(
-            //           error.message,
-            //           glRegistryDt,
-            //           URL_GATEWAY,
-            //           glStationModul,
-            //           appVersion
-            //         );
-            //         setMsg("Gagal Print Struk");
-            //         setInputValue("");
-            //         setOpenModalAlert(true);
-            //         setLoading(false);
-            //       });
 
             // Kalau gagal print coba print lagi sampai 3x percobaan
             for (let i = 0; i < 3; i++) {
@@ -563,6 +539,7 @@ function KasirPembayaran() {
                       "Gagal Print Struk\nSilahkan hubungi karyawan Indogrosir terdekat"
                     );
                     setInputValue("");
+                    flagErrorPrintReceipt.current = true;
                     setOpenModalAlert(true);
                   }
                 }
@@ -673,6 +650,7 @@ function KasirPembayaran() {
             "Cache-Control": "no-cache",
             "x-api-key": PAYMENT_KEY,
           },
+          timeout: 60000,
         }
       )
       .then((response) => {
@@ -683,10 +661,34 @@ function KasirPembayaran() {
       .catch(function (error) {
         console.log(error);
 
-        setMsg(error["response"]["data"]["status"]);
-        setLoading(false);
-        setOpenModalAlert(true);
-        setOpenModalPayment(false);
+        if (error?.code === "ECONNABORTED") {
+          setMsg(
+            "Maaf, sistem kami sedang lambat saat ini. Silahkan coba lagi"
+          );
+          setLoading(false);
+          setOpenModalAlert(true);
+          setOpenModalPayment(false);
+        } else if (error?.["response"]?.["data"]?.["status"]) {
+          const statusCode = error?.response?.status;
+          if (statusCode === 500) {
+            setMsg(error["response"]["data"]["status"]);
+
+            setLoading(false);
+            setOpenModalAlert(true);
+            setOpenModalPayment(false);
+          } else {
+            setMsg(error["response"]["data"]["status"]);
+
+            setLoading(false);
+            setOpenModalAlert(true);
+            setAlertInfo(true);
+          }
+        } else {
+          setMsg(error?.message);
+          setLoading(false);
+          setOpenModalAlert(true);
+          setOpenModalPayment(false);
+        }
       });
   };
 
@@ -730,11 +732,15 @@ function KasirPembayaran() {
           setAlertSucc(false);
           setGetPointGift(false);
           setAlertInfo(false);
-          alertSucc
-            ? await handleNavigate()
-            : msg.includes("Gagal Print Struk")
-            ? handleNavigate()
-            : navigate("/kasirSelfService");
+          if (
+            alertSucc ||
+            flagErrorPrintReceipt.current ||
+            flagTimeoutDeleteTempMember.current
+          ) {
+            handleNavigate();
+          } else {
+            navigate("/kasirSelfService");
+          }
         }}
       >
         <div className="text-center">

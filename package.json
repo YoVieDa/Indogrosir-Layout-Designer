@@ -1,6 +1,6 @@
 {
   "name": "ikiosk",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "private": true,
   "description": "Ikiosk Electron",
   "author": "Bryan Glennardy",
@@ -22,7 +22,7 @@
         {
           "target": "nsis",
           "arch": [
-            "ia32"
+            "x64"
           ]
         }
       ],

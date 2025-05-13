@@ -250,6 +250,7 @@ function PwpGabungan() {
               "Cache-Control": "no-cache",
               "x-api-key": PAYMENT_KEY,
             },
+            timeout: 60000,
           }
         )
         .then((response) => {
@@ -278,9 +279,22 @@ function PwpGabungan() {
         .catch(function (error) {
           console.log(error);
 
-          setMsg(error["response"]["data"]["status"]);
-          setLoading(false);
-          setOpenModalAlert(true);
+          if (error?.code === "ECONNABORTED") {
+            setMsg(
+              "Maaf, sistem kami sedang lambat saat ini. Silahkan coba lagi"
+            );
+            setLoading(false);
+            setOpenModalAlert(true);
+          } else if (error?.["response"]?.["data"]?.["status"]) {
+            setMsg(error["response"]["data"]["status"]);
+
+            setLoading(false);
+            setOpenModalAlert(true);
+          } else {
+            setMsg(error?.message);
+            setLoading(false);
+            setOpenModalAlert(true);
+          }
         });
     } else {
       setLoading(false);

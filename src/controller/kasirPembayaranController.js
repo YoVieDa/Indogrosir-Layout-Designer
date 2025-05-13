@@ -100,13 +100,18 @@ export const deleteTempMemberFromAPI = async (
             "Cache-Control": "no-cache",
             "x-api-key": LOGIN_KEY,
           },
+          timeout: 60000,
         }
       )
       .then(async (response) => {
         return true;
       })
       .catch((error) => {
-        if (error["response"]?.["data"]?.["status"]) {
+        if (error?.code === "ECONNABORTED") {
+          throw new Error(
+            "Maaf, sistem kami sedang lambat saat ini. Silahkan coba lagi"
+          );
+        } else if (error["response"]?.["data"]?.["status"]) {
           throw new Error(error["response"]?.["data"]?.["status"]);
         } else {
           throw new Error(error.message);
@@ -144,13 +149,18 @@ export const checkDoubleStationFromAPI = async (
             "Cache-Control": "no-cache",
             "x-api-key": LOGIN_KEY,
           },
+          timeout: 20000,
         }
       )
       .then(async (response) => {
         return true;
       })
       .catch((error) => {
-        if (error["response"]?.["data"]?.["status"]) {
+        if (error?.code === "ECONNABORTED") {
+          throw new Error(
+            "Maaf, sistem kami sedang lambat saat ini. Silahkan coba lagi"
+          );
+        } else if (error?.["response"]?.["data"]?.["status"]) {
           throw new Error(error["response"]?.["data"]?.["status"]);
         } else {
           throw new Error(error.message);
@@ -190,13 +200,18 @@ export const insertTempMemberFromAPI = async (
             "Cache-Control": "no-cache",
             "x-api-key": LOGIN_KEY,
           },
+          timeout: 20000,
         }
       )
       .then(async (response) => {
         return true;
       })
       .catch((error) => {
-        if (error["response"]?.["data"]?.["status"]) {
+        if (error?.code === "ECONNABORTED") {
+          throw new Error(
+            "Maaf, sistem kami sedang lambat saat ini. Silahkan coba lagi"
+          );
+        } else if (error?.["response"]?.["data"]?.["status"]) {
           throw new Error(error["response"]?.["data"]?.["status"]);
         } else {
           throw new Error(error.message);

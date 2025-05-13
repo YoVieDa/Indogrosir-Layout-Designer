@@ -95,6 +95,7 @@ function LoginMember() {
   let shiftStateRef = useRef(false);
 
   let ipModulRef = useRef("");
+  let hiddenInputDisable = useRef(false);
 
   useEffect(() => {
     const getRegistry = () => {
@@ -246,6 +247,8 @@ function LoginMember() {
 
   useEffect(() => {
     const setData = async () => {
+      setLoading(true);
+      hiddenInputDisable.current = true;
       console.log("Mulai");
       await setUpLogoutCounter(registrySS);
       await getCounterRotationSS(registrySS);
@@ -253,13 +256,13 @@ function LoginMember() {
       await setUpSSCounter(registrySS);
       await openShift(registrySS);
       console.log("Selesai");
+      hiddenInputDisable.current = false;
+      setLoading(false);
     };
     if (registrySS !== undefined && registrySS !== null) {
       if (registrySS["registryOraIGR"] !== "") {
-        setLoading(true);
         console.log("glRegistryDtfffff", registrySS["registryOraIGR"]);
         setData();
-        setLoading(false);
       }
     }
 
@@ -523,6 +526,7 @@ function LoginMember() {
 
   const handleBtnClosing = async () => {
     setLoading(true);
+    hiddenInputDisable.current = true;
     await axios
       .post(
         `${URL_GATEWAY}/servicePayment/closingShiftPos`,
@@ -667,6 +671,7 @@ function LoginMember() {
             }
           }
         }
+        hiddenInputDisable.current = false;
       })
       .catch(async function (error) {
         await errorLog(error["response"]?.["data"]?.["status"]);
@@ -681,6 +686,7 @@ function LoginMember() {
         setOpenModalAlert(true);
         setMsg(error["response"]?.["data"]?.["status"]);
         setLoading(false);
+        hiddenInputDisable.current = false;
       });
   };
 
@@ -690,6 +696,7 @@ function LoginMember() {
 
   const handleLogoutState = async () => {
     console.log("handlelogout", registrySS);
+    hiddenInputDisable.current = true;
     await axios
       .post(
         `${URL_GATEWAY}/login/loadLogoutPSS`,
@@ -736,6 +743,7 @@ function LoginMember() {
             setOpenModalAlert(true);
             setLoading(false);
           });
+        hiddenInputDisable.current = false;
       })
       .catch(async function (error) {
         if (error.message === "Network Error") {
@@ -756,6 +764,7 @@ function LoginMember() {
 
         setOpenModalAlert(true);
         setMsg(`Logout Gagal\n` + error.message);
+        hiddenInputDisable.current = false;
         setLoading(false);
       });
   };
@@ -890,10 +899,12 @@ function LoginMember() {
         />
       ) : null}
 
-      <HiddenInput
-        closingState={handleClosingState}
-        logoutState={handleLogoutState}
-      />
+      {!hiddenInputDisable.current ? (
+        <HiddenInput
+          closingState={handleClosingState}
+          logoutState={handleLogoutState}
+        />
+      ) : null}
 
       <ModalAlert
         open={openModalAlert}

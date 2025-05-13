@@ -66,6 +66,7 @@ function HiddenInputForPOS() {
                 "Cache-Control": "no-cache",
                 "x-api-key": PAYMENT_KEY,
               },
+              timeout: 60000,
             }
           )
           .then(async (response) => {
@@ -135,6 +136,7 @@ function HiddenInputForPOS() {
                         "Cache-Control": "no-cache",
                         "x-api-key": PAYMENT_KEY,
                       },
+                      timeout: 60000,
                     }
                   )
                   .then((response) => {
@@ -157,10 +159,33 @@ function HiddenInputForPOS() {
                   })
                   .catch(function (error) {
                     console.log(error);
+                    if (error?.code === "ECONNABORTED") {
+                      setMsg(
+                        "Maaf, sistem kami sedang lambat saat ini. Silahkan coba lagi"
+                      );
 
-                    setMsg(error["response"]["data"]["status"]);
-                    setLoading(false);
-                    setOpenModalAlert(true);
+                      setLoading(false);
+                      setOpenModalAlert(true);
+                    } else if (error?.["response"]?.["data"]?.["status"]) {
+                      const statusCode = error?.response?.status;
+                      if (statusCode === 500) {
+                        setMsg(error["response"]["data"]["status"]);
+
+                        setLoading(false);
+                        setOpenModalAlert(true);
+                      } else {
+                        setMsg(error["response"]["data"]["status"]);
+
+                        setLoading(false);
+                        setOpenModalAlert(true);
+                        setAlertInfo(true);
+                      }
+                    } else {
+                      setMsg(error?.message);
+
+                      setLoading(false);
+                      setOpenModalAlert(true);
+                    }
                   });
               };
 
@@ -182,20 +207,34 @@ function HiddenInputForPOS() {
           })
           .catch(function (error) {
             console.log(error);
-            const statusCode = error?.response?.status;
-            if (statusCode === 500) {
-              setMsg(error["response"]["data"]["status"]);
-
+            if (error?.code === "ECONNABORTED") {
+              setMsg(
+                "Maaf, sistem kami sedang lambat saat ini. Silahkan coba lagi"
+              );
               setInputValue("");
               setLoading(false);
               setOpenModalAlert(true);
+            } else if (error?.["response"]?.["data"]?.["status"]) {
+              const statusCode = error?.response?.status;
+              if (statusCode === 500) {
+                setMsg(error["response"]["data"]["status"]);
+
+                setInputValue("");
+                setLoading(false);
+                setOpenModalAlert(true);
+              } else {
+                setMsg(error["response"]["data"]["status"]);
+
+                setInputValue("");
+                setLoading(false);
+                setOpenModalAlert(true);
+                setAlertInfo(true);
+              }
             } else {
-              setMsg(error["response"]["data"]["status"]);
-
+              setMsg(error?.message);
               setInputValue("");
               setLoading(false);
               setOpenModalAlert(true);
-              setAlertInfo(true);
             }
           });
       }
