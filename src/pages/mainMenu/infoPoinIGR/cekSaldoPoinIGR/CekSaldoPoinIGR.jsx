@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { format, parse } from "date-fns";
@@ -54,6 +54,7 @@ function CekSaldoPoinIGR() {
   const [isLandscape, setIsLandscape] = useState(false);
   const glStationModul = useSelector((state) => state.glUser.stationModul);
   const appVersion = packageJson.version;
+  let flagPoinTimeout = useRef(false);
 
   // useEffect(() => {
   //   handleToggleMember();
@@ -79,7 +80,6 @@ function CekSaldoPoinIGR() {
       .format(number)
       .replace(/\./g, ",");
   };
-  const glIpModul = useSelector((state) => state.glDtIp.dtIp);
 
   const handleNavigateLogout = async () => {
     setLoading(true);
@@ -141,6 +141,7 @@ function CekSaldoPoinIGR() {
               "Cache-Control": "no-cache",
               "x-api-key": POIN_KEY,
             },
+            timeout: 60000,
           }
         )
         .then((response) => {
@@ -155,7 +156,31 @@ function CekSaldoPoinIGR() {
         })
         .catch(function (error) {
           console.log(error.message);
-          setLoading(false);
+          if (error?.code === "ECONNABORTED") {
+            setAlertMsg(
+              "Maaf, sistem kami sedang lambat saat ini. Silahkan coba lagi"
+            );
+            setLoading(false);
+            flagPoinTimeout.current = true;
+            setOpenModalAlert(true);
+          } else if (error?.["response"]?.["data"]?.["status"]) {
+            const statusCode = error?.response?.status;
+            if (statusCode === 500) {
+              setAlertMsg(error["response"]["data"]["status"]);
+
+              setLoading(false);
+              setOpenModalAlert(true);
+            } else {
+              setAlertMsg(error["response"]["data"]["status"]);
+
+              setLoading(false);
+              setOpenModalAlert(true);
+            }
+          } else {
+            setAlertMsg(error?.message);
+            setLoading(false);
+            setOpenModalAlert(true);
+          }
         });
     };
 
@@ -495,7 +520,12 @@ function CekSaldoPoinIGR() {
       <Loader loading={loading} merah={memberMerah} />
       <ModalAlert
         open={openModalAlert}
-        onClose={() => setOpenModalAlert(false)}
+        onClose={() => {
+          setOpenModalAlert(false);
+          if (flagPoinTimeout.current) {
+            handleNavigate();
+          }
+        }}
         landscape={isLandscape}
       >
         <div className="text-center">
