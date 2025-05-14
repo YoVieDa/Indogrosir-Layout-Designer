@@ -113,6 +113,7 @@ function KasirPembayaran() {
   const appVersion = packageJson.version;
   let flagErrorPrintReceipt = useRef(false);
   let flagTimeoutDeleteTempMember = useRef(false);
+  let flagSPayLimitAmount = useRef(false);
 
   const generateDocCode = (noTransaksi) => {
     // Mengubah string menjadi angka, menambah 1, dan kemudian mengubah kembali menjadi string
@@ -608,88 +609,100 @@ function KasirPembayaran() {
 
   const handleSelectedPayment = async (selectedPaymentParam) => {
     setSelectedPayment(selectedPaymentParam);
+    if (
+      selectedPaymentParam === "SHOPEEPAY" &&
+      Math.round(Number(glDtHitungTotal[0]["jumlahPenjualan"])) > 2000000
+    ) {
+      flagSPayLimitAmount.current = true;
+      setMsg(
+        "Maaf, Nominal pembayaran ShopeePay harus lebih kecil dari Rp 2.000.000,-"
+      );
+      setLoading(false);
+      setOpenModalAlert(true);
+      setOpenModalPayment(false);
+    } else {
+      setHitungPromoPembayaranStatus(true);
+      setLoading(true);
 
-    setHitungPromoPembayaranStatus(true);
-    setLoading(true);
-
-    await axios
-      .post(
-        `${URL_GATEWAY}/servicePayment/hitungPromoPembayaran`,
-        {
-          kodeIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
-          dbStatus: glRegistryDt["glRegistryDt"]["server"],
-          dtMember: {
-            memberID: userDt["memberID"],
-            memberFlag: userDt["memberFlag"],
-            cus_idsegment: userDt["cus_idsegment"],
-            cus_jenismember: userDt["cus_jenismember"],
+      await axios
+        .post(
+          `${URL_GATEWAY}/servicePayment/hitungPromoPembayaran`,
+          {
+            kodeIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
+            dbStatus: glRegistryDt["glRegistryDt"]["server"],
+            dtMember: {
+              memberID: userDt["memberID"],
+              memberFlag: userDt["memberFlag"],
+              cus_idsegment: userDt["cus_idsegment"],
+              cus_jenismember: userDt["cus_jenismember"],
+            },
+            totalNilai: glDtHitungTotal[0]["totalNilai"],
+            userModul: glUserModul,
+            stationModul: glStationModul,
+            dtCashback: glDtHitungTotal[0]["dtPromosiRaw"],
+            dtCashbackDtl: glDtHitungTotal[0]["dtPromosiDtlRaw"],
+            dtGift: glDtHitungTotal[0]["dtGift"],
+            totDisc: glDtHitungTotal[0]["totDisc"],
+            timeStart: glDtTimeStart,
+            dtDtlBrngUpdate: glDtHitungTotal[0]["dtDtlBrngUpdate"],
+            totalTransaksiPointUntukFasilitasBank:
+              glDtHitungTotal[0]["totalTransaksiPointUntukFasilitasBank"],
+            selectedPayment: selectedPaymentParam,
           },
-          totalNilai: glDtHitungTotal[0]["totalNilai"],
-          userModul: glUserModul,
-          stationModul: glStationModul,
-          dtCashback: glDtHitungTotal[0]["dtPromosiRaw"],
-          dtCashbackDtl: glDtHitungTotal[0]["dtPromosiDtlRaw"],
-          dtGift: glDtHitungTotal[0]["dtGift"],
-          totDisc: glDtHitungTotal[0]["totDisc"],
-          timeStart: glDtTimeStart,
-          dtDtlBrngUpdate: glDtHitungTotal[0]["dtDtlBrngUpdate"],
-          totalTransaksiPointUntukFasilitasBank:
-            glDtHitungTotal[0]["totalTransaksiPointUntukFasilitasBank"],
-          selectedPayment: selectedPaymentParam,
-        },
-        {
-          headers: {
-            server: glRegistryDt["glRegistryDt"]["server"],
-            registryOraIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
-            registryIp: glRegistryDt["glRegistryDt"]["registryOraIP"],
-            registryPort: glRegistryDt["glRegistryDt"]["registryPort"],
-            registryServiceName:
-              glRegistryDt["glRegistryDt"]["registryServiceName"],
-            registryUser: glRegistryDt["glRegistryDt"]["registryUser"],
-            registryPwd: glRegistryDt["glRegistryDt"]["registryPwd"],
-            "Cache-Control": "no-cache",
-            "x-api-key": PAYMENT_KEY,
-          },
-          timeout: 60000,
-        }
-      )
-      .then((response) => {
-        setDtHitungPromoPembayaran(response["data"]);
-        setHitungPromoPembayaranStatus(false);
-        setLoading(false);
-      })
-      .catch(function (error) {
-        console.log(error);
-
-        if (error?.code === "ECONNABORTED") {
-          setMsg(
-            "Maaf, sistem kami sedang lambat saat ini. Silahkan coba lagi"
-          );
+          {
+            headers: {
+              server: glRegistryDt["glRegistryDt"]["server"],
+              registryOraIGR: glRegistryDt["glRegistryDt"]["registryOraIGR"],
+              registryIp: glRegistryDt["glRegistryDt"]["registryOraIP"],
+              registryPort: glRegistryDt["glRegistryDt"]["registryPort"],
+              registryServiceName:
+                glRegistryDt["glRegistryDt"]["registryServiceName"],
+              registryUser: glRegistryDt["glRegistryDt"]["registryUser"],
+              registryPwd: glRegistryDt["glRegistryDt"]["registryPwd"],
+              "Cache-Control": "no-cache",
+              "x-api-key": PAYMENT_KEY,
+            },
+            timeout: 60000,
+          }
+        )
+        .then((response) => {
+          setDtHitungPromoPembayaran(response["data"]);
+          setHitungPromoPembayaranStatus(false);
           setLoading(false);
-          setOpenModalAlert(true);
-          setOpenModalPayment(false);
-        } else if (error?.["response"]?.["data"]?.["status"]) {
-          const statusCode = error?.response?.status;
-          if (statusCode === 500) {
-            setMsg(error["response"]["data"]["status"]);
+        })
+        .catch(function (error) {
+          console.log(error);
 
+          if (error?.code === "ECONNABORTED") {
+            setMsg(
+              "Maaf, sistem kami sedang lambat saat ini. Silahkan coba lagi"
+            );
             setLoading(false);
             setOpenModalAlert(true);
             setOpenModalPayment(false);
-          } else {
-            setMsg(error["response"]["data"]["status"]);
+          } else if (error?.["response"]?.["data"]?.["status"]) {
+            const statusCode = error?.response?.status;
+            if (statusCode === 500) {
+              setMsg(error["response"]["data"]["status"]);
 
+              setLoading(false);
+              setOpenModalAlert(true);
+              setOpenModalPayment(false);
+            } else {
+              setMsg(error["response"]["data"]["status"]);
+
+              setLoading(false);
+              setOpenModalAlert(true);
+              setAlertInfo(true);
+            }
+          } else {
+            setMsg(error?.message);
             setLoading(false);
             setOpenModalAlert(true);
-            setAlertInfo(true);
+            setOpenModalPayment(false);
           }
-        } else {
-          setMsg(error?.message);
-          setLoading(false);
-          setOpenModalAlert(true);
-          setOpenModalPayment(false);
-        }
-      });
+        });
+    }
   };
 
   const handleInputChange = (event) => {
@@ -738,7 +751,7 @@ function KasirPembayaran() {
             flagTimeoutDeleteTempMember.current
           ) {
             handleNavigate();
-          } else {
+          } else if (!flagSPayLimitAmount.current) {
             navigate("/kasirSelfService");
           }
         }}
