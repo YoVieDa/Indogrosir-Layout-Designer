@@ -323,7 +323,7 @@ function KasirPembayaran() {
         setInputValue("");
         setSelectedPayment(selectedPayment);
       } else if (openModalPayment === false) {
-        if (selectedPayment !== "") {
+        if (selectedPayment !== "" && loading) {
           setInputValue("");
         } else {
           setInputValue("");
