@@ -196,7 +196,7 @@ function PwpGabungan() {
         sendToApi = false;
       } else {
         sendToApi = true;
-        setDtTablePLUPWPUpdate([]);
+        // setDtTablePLUPWPUpdate([]);
       }
     }
 
