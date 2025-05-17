@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { LogoIGR, IcWarn } from "../../../../assets";
@@ -29,8 +29,6 @@ function PwpGabungan() {
     (state) => state.glRegistry.dtDecryptedRegistry
   );
 
-  // const { dtForPWP, pembulatan } = location.state;
-
   const [isLandscape, setIsLandscape] = useState(false);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
@@ -41,7 +39,7 @@ function PwpGabungan() {
   const glUserModul = useSelector((state) => state.glUser.userModul);
   const glStationModul = useSelector((state) => state.glUser.stationModul);
   const [dtTablePLUPWPUpdate, setDtTablePLUPWPUpdate] = useState([]);
-  // let dtTablePLUPWPUpdate = [];
+  let backupDtTablePluPwpUpdate = useRef([]);
 
   const countTotal = () => {
     let totalTemp = 0;
@@ -64,24 +62,6 @@ function PwpGabungan() {
 
     countTotal();
 
-    // console.log("first dtForPWP", glDtPwp);
-
-    // // Isi dtTablePLUPWPUpdate
-    // for (let i = 0; i < glDtPwp["dtTablePLUPWP"].length; i++) {
-    //   dtTablePLUPWPUpdate.push({
-    //     PRDCD: glDtPwp["dtTablePLUPWP"][i]["PRDCD"],
-    //     DESKRIPSI: glDtPwp["dtTablePLUPWP"][i]["DESKRIPSI"],
-    //     CASHBACK: glDtPwp["dtTablePLUPWP"][i]["CASHBACK"],
-    //     KELIPATAN: glDtPwp["dtTablePLUPWP"][i]["KELIPATAN"],
-    //     KELIPATAN_FROM_INPUT_CUS: 0,
-    //     TOTAL_CASHBACK: 0,
-    //     MAX_KELIPATAN: glDtPwp["dtTablePLUPWP"][i]["MAX_KELIPATAN"],
-    //   });
-    // }
-
-    // console.log(dtTablePLUPWPUpdate);
-    // setMaxKelipatan(dtTablePLUPWPUpdate[0]["MAX_KELIPATAN"]);
-
     return () => {
       window.removeEventListener("resize", updateOrientation);
     };
@@ -90,7 +70,6 @@ function PwpGabungan() {
 
   useEffect(() => {
     // Isi dtTablePLUPWPUpdate
-
     for (let i = 0; i < glDtPwp["dtTablePLUPWP"].length; i++) {
       dtTablePLUPWPUpdate.push({
         PRDCD: glDtPwp["dtTablePLUPWP"][i]["PRDCD"],
@@ -107,11 +86,6 @@ function PwpGabungan() {
     setMaxKelipatan(dtTablePLUPWPUpdate[0]["MAX_KELIPATAN"]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [glDtPwp]);
-
-  // useEffect(() => {
-  //   countTotal();
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [dtAllItem]);
 
   const handleKurangKelipatanBtn = (idx) => {
     const dtUpdate = [...dtTablePLUPWPUpdate];
@@ -196,7 +170,8 @@ function PwpGabungan() {
         sendToApi = false;
       } else {
         sendToApi = true;
-        // setDtTablePLUPWPUpdate([]);
+        backupDtTablePluPwpUpdate.current = dtTablePLUPWPUpdate;
+        setDtTablePLUPWPUpdate([]);
       }
     }
 
@@ -255,8 +230,6 @@ function PwpGabungan() {
         )
         .then((response) => {
           if (response["data"]["flagPwp"]) {
-            console.log("dtPWP:", response["data"]);
-            console.log(dtTablePLUPWPUpdate);
             dispatch(addItemDtPwp(response["data"]));
 
             navigate("/pwpGabungan");
@@ -278,7 +251,7 @@ function PwpGabungan() {
         })
         .catch(function (error) {
           console.log(error);
-
+          setDtTablePLUPWPUpdate(backupDtTablePluPwpUpdate.current);
           if (error?.code === "ECONNABORTED") {
             setMsg(
               "Maaf, sistem kami sedang lambat saat ini. Silahkan coba lagi"
