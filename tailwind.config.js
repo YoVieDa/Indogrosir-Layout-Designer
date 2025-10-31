@@ -23,10 +23,10 @@ module.exports = {
         green5: "#1AE553",
       },
       fontSize: {
-        title: "64px",
-        subTitle: "48px",
-        text: "36px",
-        subText: "32px",
+        title: "2rem",
+        subTitle: "1.50rem",
+        text: "1.250rem",
+        subText: "1.125rem",
       },
       borderRadius: {
         DEFAULT: "15px",

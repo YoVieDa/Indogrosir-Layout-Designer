@@ -1,0 +1,67 @@
+.container {
+  padding: 1rem;
+  font-family: sans-serif;
+}
+
+.header-container {
+  margin: 1rem;
+}
+
+.inline {
+  display: inline;
+}
+
+.toolbar {
+  margin: 1rem;
+}
+
+.grid-area {
+  position: relative;
+  width: 1200px;
+  height: 600px;
+  border: 1px solid #ccc;
+  background-image: linear-gradient(to right, #eee 1px, transparent 1px),
+                    linear-gradient(to bottom, #eee 1px, transparent 1px);
+  background-size: 15px 15px;
+}
+
+.grid-item {
+  width: 100%;
+  height: 100%;
+  background-color: #3b82f6;
+  color: white;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.actions {
+  position: absolute;
+  bottom: 0.25rem;
+  left: 0.25rem;
+  display: flex;
+  gap: 0.25rem;
+}
+
+.selection-box {
+  position: absolute;
+  background-color: rgba(59, 130, 246, 0.3);
+  border: 1px dashed #2563eb;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.selection-frozen {
+  position: absolute;
+  background-color: rgba(59, 130, 246, 0.2);
+  /* border: 1px solid #2563eb; */
+  pointer-events: none;
+  z-index: 5;
+}
+
+.show-rak {
+  border-style: solid;
+  border-width: 1px;
+  border-color: black;
+}

@@ -1,6 +1,5 @@
 import React from "react";
 import { X } from "react-feather";
-import { useSelector } from "react-redux";
 
 function ModalAlert({ open, onClose, children, landscape, successAlert }) {
   return (
@@ -32,7 +31,7 @@ function ModalAlert({ open, onClose, children, landscape, successAlert }) {
           onClick={onClose}
           className="absolute p-1 text-gray-400 bg-white rounded-lg top-2 right-2 hover:bg-gray-50 hover:text-gray-600"
         >
-          <X size="45px" />
+          <X size="20px" />
         </button>
         {children}
       </div>

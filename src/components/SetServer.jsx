@@ -5,7 +5,6 @@ import { Dialog, Transition } from "@headlessui/react";
 import Dropdown from "./Dropdown";
 import ModalAlert from "./ModalAlert";
 import axios from "axios";
-import { channels } from "../shared/constants";
 import { IcSucc, IcErr } from "../assets";
 import { setGlDtEncryptedRegistry } from "../services/redux/registryReducer";
 import { SET_SERVER_KEY, URL_GATEWAY } from "../config";
@@ -16,14 +15,11 @@ const server = ["Production", "Simulasi"];
 
 const placeholderCabang = "Pilih Cabang";
 const placeholderServer = "Pilih Server";
-const placeholderPrinter = "Pilih Merk Printer";
 
 function SetServer({ show }) {
   const [open, setOpen] = useState(show);
   const [selectedCabang, setSelectedCabang] = useState("");
   const [selectedServer, setSelectedServer] = useState("");
-  const [selectedMerkPrn, setSelectedMerkPrn] = useState("EPSON THERMAL");
-  const [selectedPrnName, setSelectedPrnName] = useState("");
   const [branchList, setBranchList] = useState([]);
   const [openModalAlert, setOpenModalAlert] = useState(false);
   const [msg, setMsg] = useState("");
@@ -37,8 +33,6 @@ function SetServer({ show }) {
     encryptedOraSN: "",
     encryptedOraUser: "",
     encryptedOraPwd: "",
-    encryptedPrnName: "",
-    encryptedPrnBrand: "",
     userModul: "",
     stationModul: "",
     namaModul: "",
@@ -52,13 +46,6 @@ function SetServer({ show }) {
   const handleDropdownSelectedServer = (option) => {
     setSelectedServer(option);
   };
-  const handleDropdownSelectedMerkPrn = (event) => {
-    setSelectedMerkPrn(event.target.value);
-  };
-  const handleDropdownSelectedPrnName = (option) => {
-    setSelectedPrnName(option);
-  };
-  const landscape = useSelector((state) => state.glDtOrientation.dtLandscape);
   const URL_GATEWAY = useSelector((state) => state.glRegistry.dtGatewayURL);
   const [isLandscape, setIsLandscape] = useState(false);
   const glUserModul = useSelector((state) => state.glUser.userModul);
@@ -149,14 +136,15 @@ function SetServer({ show }) {
     let data = {
       kodeIGR: selectedCabang.slice(0, 2),
       server: selectedServer,
-      prnName: selectedPrnName,
-      prnBrand: selectedMerkPrn,
     };
 
-    if (data.kodeIGR && data.server && data.prnName && data.prnBrand) {
-      await axios
+    console.log('Dani');
+    console.log(data);
+
+    if (data.kodeIGR && data.server) {
+    await axios
         .get(
-          `${URL_GATEWAY}/setServer/getConnDetail?kodeIGR=${data.kodeIGR}&server=${data.server}&prnName=${data.prnName}&prnBrand=${data.prnBrand}`,
+          `${URL_GATEWAY}/setServer/getConnDetail?kodeIGR=${data.kodeIGR}&server=${data.server}`,
           {
             headers: {
               "Cache-Control": "no-cache",
@@ -180,10 +168,6 @@ function SetServer({ show }) {
               response.data.data["encryptedOraUser"]),
             (dtRegistry.encryptedOraPwd =
               response.data.data["encryptedOraPwd"]),
-            (dtRegistry.encryptedPrnName =
-              response.data.data["encryptedPrnName"]),
-            (dtRegistry.encryptedPrnBrand =
-              response.data.data["encryptedPrnBrand"]),
             (dtRegistry.userModul = glUserModul),
             (dtRegistry.stationModul = glStationModul),
             (dtRegistry.namaModul = glNamaModul)
@@ -200,8 +184,6 @@ function SetServer({ show }) {
               encryptedOraSN: dtRegistry.encryptedOraSN,
               encryptedOraUser: dtRegistry.encryptedOraUser,
               encryptedOraPwd: dtRegistry.encryptedOraPwd,
-              encryptedPrnName: dtRegistry.encryptedPrnName,
-              encryptedPrnBrand: dtRegistry.encryptedPrnBrand,
             })
           );
 
@@ -236,7 +218,6 @@ function SetServer({ show }) {
           setMsgTitle("Error");
           setMsg(error["response"]["data"]["status"]);
           setOpenModalAlert(true);
-          // navigate("/");
           setOpen(false);
           refreshApp();
         });
@@ -300,33 +281,27 @@ function SetServer({ show }) {
                 leaveTo="opacity-0 translate-y-4 translate-y-0 scale-95"
               >
                 <Dialog.Panel
-                  className={`relative ${
-                    landscape ? "w-[70%]" : "w-[90%]"
-                  }  transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all`}
+                  className={`relative w-[70%] transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all`}
                 >
                   <div className="text-center ">
-                    <Dialog.Title className="py-5 font-bold text-center text-white bg-gray-400 text-title">
+                    <Dialog.Title className="py-5 font-bold text-center text-white bg-gray-400 text-xl">
                       Set Server
                     </Dialog.Title>
                   </div>
-                  <div className="p-10 bg-white">
+                  <div className="p-10 pt-5 bg-white">
                     <div className="mt-2">
                       {validation && (
                         <p className="text-red text-left w-[50%]">
                           {validation}
                         </p>
                       )}
-                      <p className="mb-5 font-bold text-text">
+                      <p className="mb-5 font-bold text-lg">
                         Server Settings
                       </p>
                       <div
-                        className={`flex ${
-                          landscape
-                            ? "flex-row justify-between"
-                            : "flex-col gap-5"
-                        }   align-middle`}
+                        className={`flex flex-col gap-5 align-middle`}
                       >
-                        <p className="text-text">Cabang</p>
+                        <p className="text-lg">Cabang</p>
                         <Dropdown
                           data={branchList}
                           placeholder={placeholderCabang}
@@ -335,72 +310,13 @@ function SetServer({ show }) {
                         />
                       </div>
                       <div
-                        className={`flex ${
-                          landscape
-                            ? "flex-row justify-between"
-                            : "flex-col gap-5"
-                        }  mt-10 align-middle`}
+                        className={`flex flex-col gap-5 mt-6 align-middle`}
                       >
-                        <p className="text-text">Server</p>
+                        <p className="text-lg">Server</p>
                         <Dropdown
                           placeholder={placeholderServer}
                           data={server}
                           onSelect={handleDropdownSelectedServer}
-                          landscape={isLandscape}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pb-10 pl-10 pr-10 bg-white">
-                    <div className="mt-2">
-                      <p className="mb-5 font-bold text-text">
-                        Printer Settings
-                      </p>
-                      <div className="flex flex-row gap-10 align-middle">
-                        <p className="text-text">Merk Printer</p>
-                        <div className="flex gap-10">
-                          {/* <RadioBtn label="EPSON THERMAL" /> */}
-                          {/* <RadioBtn label="STAR THERMAL" /> */}
-                          <label>
-                            <input
-                              type="radio"
-                              value="EPSON THERMAL"
-                              className="w-10 h-10 align-middle"
-                              checked={selectedMerkPrn === "EPSON THERMAL"}
-                              onChange={handleDropdownSelectedMerkPrn}
-                            />
-                            <span className="ml-5 text-black align-middle text-subText">
-                              EPSON THERMAL
-                            </span>
-                          </label>
-                          <label>
-                            <input
-                              type="radio"
-                              value="STAR THERMAL"
-                              checked={selectedMerkPrn === "STAR THERMAL"}
-                              className="w-10 h-10 align-middle"
-                              onChange={handleDropdownSelectedMerkPrn}
-                            />
-                            <span className="ml-5 text-black align-middle text-subText">
-                              STAR THERMAL
-                            </span>
-                          </label>
-                        </div>
-                      </div>
-                      <div
-                        className={`flex ${
-                          landscape
-                            ? "flex-row justify-between"
-                            : "flex-col gap-5"
-                        } mt-10 align-middle`}
-                      >
-                        <p className="text-text">Nama Printer</p>
-                        <Dropdown
-                          placeholder={placeholderPrinter}
-                          data={installedPrn}
-                          onSelect={handleDropdownSelectedPrnName}
-                          size="namaPrn"
                           landscape={isLandscape}
                         />
                       </div>
@@ -420,7 +336,6 @@ function SetServer({ show }) {
                       className="i w-[50%] rounded-md bg-red px-3 py-2 text-subText font-bold text-white shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-500"
                       onClick={() => {
                         setOpen(false);
-                        // handleBatalBtn(false);
                         refreshApp();
                       }}
                       ref={cancelButtonRef}

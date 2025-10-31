@@ -3,7 +3,6 @@ import { useState, useRef, Fragment } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Dialog, Transition } from "@headlessui/react";
 import ModalAlert from "./ModalAlert";
-import Keyboard from "react-simple-keyboard";
 import { IcSucc, IcErr } from "../assets";
 import { setGlDtGatewayURL } from "../services/redux/registryReducer";
 import Loader from "./Loader";
@@ -20,12 +19,10 @@ function SetGatewayUrl({ show, showSetServer, f8Key = false }) {
   const [inputUser, setInputUser] = useState("");
   const [inputPassword, setInputPassword] = useState("");
   const [currentInput, setCurrentInput] = useState(null);
-  const keyboard = useRef();
   const dispatch = useDispatch();
   const cancelButtonRef = useRef(null);
   const [loading, setLoading] = useState(false);
 
-  const landscape = useSelector((state) => state.glDtOrientation.dtLandscape);
   const [isLandscape, setIsLandscape] = useState(false);
   const glRegistryDt = useSelector(
     (state) => state.glRegistry.dtDecryptedRegistry
@@ -33,13 +30,13 @@ function SetGatewayUrl({ show, showSetServer, f8Key = false }) {
 
   const handleFocus = (inputType) => {
     setCurrentInput(inputType);
-    keyboard.current.setInput(
-      inputType === "user"
-        ? inputUser
-        : inputType === "password"
-        ? inputPassword
-        : inputUser
-    );
+    // keyboard.current.setInput(
+    //   inputType === "user"
+    //     ? inputUser
+    //     : inputType === "password"
+    //     ? inputPassword
+    //     : inputUser
+    // );
   };
 
   const onChangeInput = (event, inputType) => {
@@ -49,7 +46,7 @@ function SetGatewayUrl({ show, showSetServer, f8Key = false }) {
     } else if (inputType === "password") {
       setInputPassword(input);
     }
-    keyboard.current.setInput(input);
+    // keyboard.current.setInput(input);
   };
 
   const onChangeAll = (input) => {
@@ -63,13 +60,10 @@ function SetGatewayUrl({ show, showSetServer, f8Key = false }) {
   const handleSimpan = async () => {
     if (!inputPassword) {
       setMsg("Maaf, IP Gateway Harus Diisi");
-
-      // setAlertIc("Error");
-      // setAlertTitle("Error");
       return;
     }
 
-    let urlGateway = "http://" + inputPassword.toString() + ":3024";
+    let urlGateway = "http://" + inputPassword.toString() + ":3025";
 
     dispatch(setGlDtGatewayURL(urlGateway.toLowerCase()));
 
@@ -163,12 +157,10 @@ function SetGatewayUrl({ show, showSetServer, f8Key = false }) {
                 leaveTo="opacity-0 translate-y-4 translate-y-0 scale-95"
               >
                 <Dialog.Panel
-                  className={`relative ${
-                    landscape ? "w-[70%]" : "w-[90%]"
-                  }  transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all`}
+                  className={`relative w-[70%] transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all`}
                 >
                   <div className="text-center ">
-                    <Dialog.Title className="py-5 font-bold text-center text-white bg-gray-400 text-title">
+                    <Dialog.Title className="py-5 font-bold text-center text-white bg-gray-400 text-xl">
                       Set URL Gateway
                     </Dialog.Title>
                   </div>
@@ -179,18 +171,15 @@ function SetGatewayUrl({ show, showSetServer, f8Key = false }) {
                           isLandscape ? "w-[50%]" : "w-[100%]"
                         }`}
                       >
-                        <label className="font-bold text-subText">
-                          IP Gateway
-                        </label>
+                        <label className="block text-lg font-medium text-gray-700 mb-1">IP Gateway</label>
                         <input
                           id="password"
                           type="password"
                           value={inputPassword}
                           onFocus={() => handleFocus("password")}
-                          placeholder={"Masukkan IP Gateway"}
+                          placeholder={"Masukkan Password"}
                           onChange={(e) => onChangeInput(e, "password")}
-                          autoFocus={true}
-                          className="border drop-shadow-lg bg-stroke p-5 rounded-xl w-[100%] text-subText"
+                          className="drop-shadow-lg w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200"
                         />
                         {msg && (
                           <p className="text-red text-left text-subText w-[100%]">
@@ -199,53 +188,6 @@ function SetGatewayUrl({ show, showSetServer, f8Key = false }) {
                         )}
                       </div>
                     </div>
-                  </div>
-                  <div
-                    className={`${
-                      isLandscape ? "w-[85%]" : " w-[100%]"
-                    } self-center mt-5 px-5`}
-                  >
-                    <Keyboard
-                      layout={{
-                        default: [
-                          "1 2 3 4 5 6 7 8 9 0 _ {bksp}",
-                          "Q W E R T Y U I O P",
-                          "A S D F G H J K L",
-                          "Z X C V B N M , . @",
-                          "{space}",
-                        ],
-                      }}
-                      display={{
-                        "{bksp}": "⌫",
-                        "{space}": "Space",
-                      }}
-                      theme="hg-theme-default hg-layout-default myTheme"
-                      keyboardRef={(r) => (keyboard.current = r)}
-                      //   inputName={inputName}
-                      onChange={onChangeAll}
-                      buttonTheme={[
-                        {
-                          class: "custom-btn",
-                          buttons: "1 2 3 4 5 6 7 8 9 0 _ {bksp}",
-                        },
-                        {
-                          class: "custom-btn",
-                          buttons: "Q W E R T Y U I O P",
-                        },
-                        {
-                          class: "custom-btn",
-                          buttons: "A S D F G H J K L",
-                        },
-                        {
-                          class: "custom-btn",
-                          buttons: "Z X C V B N M , . @",
-                        },
-                        {
-                          class: "custom-btn",
-                          buttons: "{space}",
-                        },
-                      ]}
-                    />
                   </div>
 
                   <div className="flex justify-center gap-5 px-4 py-3 mt-5 bg-gray-50">
